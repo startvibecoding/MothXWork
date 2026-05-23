@@ -1,5 +1,49 @@
 export namespace vibecoding {
 	
+	export class ApprovalConfig {
+	    bashWhitelist?: string[];
+	    bashBlacklist?: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new ApprovalConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.bashWhitelist = source["bashWhitelist"];
+	        this.bashBlacklist = source["bashBlacklist"];
+	    }
+	}
+	export class CompactionConfig {
+	    enabled: boolean;
+	    reserveTokens: number;
+	    keepRecentTokens: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new CompactionConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.enabled = source["enabled"];
+	        this.reserveTokens = source["reserveTokens"];
+	        this.keepRecentTokens = source["keepRecentTokens"];
+	    }
+	}
+	export class ContextFilesConfig {
+	    enabled: boolean;
+	    extraFiles?: string[];
+	
+	    static createFrom(source: any = {}) {
+	        return new ContextFilesConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.enabled = source["enabled"];
+	        this.extraFiles = source["extraFiles"];
+	    }
+	}
 	export class ModelConfig {
 	    id: string;
 	    name: string;
@@ -54,6 +98,46 @@ export namespace vibecoding {
 		    return a;
 		}
 	}
+	export class RetryConfig {
+	    enabled: boolean;
+	    maxRetries: number;
+	    baseDelayMs: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new RetryConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.enabled = source["enabled"];
+	        this.maxRetries = source["maxRetries"];
+	        this.baseDelayMs = source["baseDelayMs"];
+	    }
+	}
+	export class SandboxConfig {
+	    enabled: boolean;
+	    level: string;
+	    allowNetwork: boolean;
+	    allowedRead?: string[];
+	    deniedPaths?: string[];
+	    passEnv?: string[];
+	    tmpSize?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new SandboxConfig(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.enabled = source["enabled"];
+	        this.level = source["level"];
+	        this.allowNetwork = source["allowNetwork"];
+	        this.allowedRead = source["allowedRead"];
+	        this.deniedPaths = source["deniedPaths"];
+	        this.passEnv = source["passEnv"];
+	        this.tmpSize = source["tmpSize"];
+	    }
+	}
 	export class SessionConfig {
 	    cwd: string;
 	    provider?: string;
@@ -80,6 +164,18 @@ export namespace vibecoding {
 	    defaultModel: string;
 	    defaultThinkingLevel: string;
 	    defaultMode: string;
+	    maxOutputTokens?: number;
+	    maxContextTokens?: number;
+	    compaction?: CompactionConfig;
+	    sandbox?: SandboxConfig;
+	    contextFiles?: ContextFilesConfig;
+	    skillsDir?: string;
+	    sessionDir?: string;
+	    shellPath?: string;
+	    shellCommandPrefix?: string;
+	    theme?: string;
+	    retry?: RetryConfig;
+	    approval?: ApprovalConfig;
 	
 	    static createFrom(source: any = {}) {
 	        return new VibeCodingSettings(source);
@@ -92,6 +188,18 @@ export namespace vibecoding {
 	        this.defaultModel = source["defaultModel"];
 	        this.defaultThinkingLevel = source["defaultThinkingLevel"];
 	        this.defaultMode = source["defaultMode"];
+	        this.maxOutputTokens = source["maxOutputTokens"];
+	        this.maxContextTokens = source["maxContextTokens"];
+	        this.compaction = this.convertValues(source["compaction"], CompactionConfig);
+	        this.sandbox = this.convertValues(source["sandbox"], SandboxConfig);
+	        this.contextFiles = this.convertValues(source["contextFiles"], ContextFilesConfig);
+	        this.skillsDir = source["skillsDir"];
+	        this.sessionDir = source["sessionDir"];
+	        this.shellPath = source["shellPath"];
+	        this.shellCommandPrefix = source["shellCommandPrefix"];
+	        this.theme = source["theme"];
+	        this.retry = this.convertValues(source["retry"], RetryConfig);
+	        this.approval = this.convertValues(source["approval"], ApprovalConfig);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

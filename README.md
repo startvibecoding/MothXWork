@@ -2,6 +2,8 @@
 
 A desktop GUI client for VibeCoding built with Wails, React, and TypeScript.
 
+English | [中文](./README_zh.md)
+
 ## Features
 
 - 🤖 Chat with AI coding assistant

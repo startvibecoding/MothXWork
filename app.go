@@ -65,6 +65,15 @@ func (a *App) GetSettings() *vibecoding.VibeCodingSettings {
 	return a.settings
 }
 
+// SaveSettings saves the VibeCoding settings
+func (a *App) SaveSettings(settings *vibecoding.VibeCodingSettings) error {
+	if err := vibecoding.SaveSettings(settings); err != nil {
+		return err
+	}
+	a.settings = settings
+	return nil
+}
+
 // GetProviders returns available providers
 func (a *App) GetProviders() []map[string]string {
 	return a.settings.GetProviders()

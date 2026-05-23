@@ -50,6 +50,10 @@ export function SaveSessionConfig(arg1) {
   return window['go']['main']['App']['SaveSessionConfig'](arg1);
 }
 
+export function SaveSettings(arg1) {
+  return window['go']['main']['App']['SaveSettings'](arg1);
+}
+
 export function SendMessage(arg1, arg2) {
   return window['go']['main']['App']['SendMessage'](arg1, arg2);
 }

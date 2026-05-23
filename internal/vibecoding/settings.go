@@ -14,6 +14,55 @@ type VibeCodingSettings struct {
 	DefaultModel         string                     `json:"defaultModel"`
 	DefaultThinkingLevel string                     `json:"defaultThinkingLevel"`
 	DefaultMode          string                     `json:"defaultMode"`
+	MaxOutputTokens      int                        `json:"maxOutputTokens,omitempty"`
+	MaxContextTokens     int                        `json:"maxContextTokens,omitempty"`
+	Compaction           *CompactionConfig          `json:"compaction,omitempty"`
+	Sandbox              *SandboxConfig             `json:"sandbox,omitempty"`
+	ContextFiles         *ContextFilesConfig        `json:"contextFiles,omitempty"`
+	SkillsDir            string                     `json:"skillsDir,omitempty"`
+	SessionDir           string                     `json:"sessionDir,omitempty"`
+	ShellPath            string                     `json:"shellPath,omitempty"`
+	ShellCommandPrefix   string                     `json:"shellCommandPrefix,omitempty"`
+	Theme                string                     `json:"theme,omitempty"`
+	Retry                *RetryConfig               `json:"retry,omitempty"`
+	Approval             *ApprovalConfig            `json:"approval,omitempty"`
+}
+
+// CompactionConfig represents compaction settings
+type CompactionConfig struct {
+	Enabled          bool `json:"enabled"`
+	ReserveTokens    int  `json:"reserveTokens"`
+	KeepRecentTokens int  `json:"keepRecentTokens"`
+}
+
+// SandboxConfig represents sandbox settings
+type SandboxConfig struct {
+	Enabled      bool     `json:"enabled"`
+	Level        string   `json:"level"`
+	AllowNetwork bool     `json:"allowNetwork"`
+	AllowedRead  []string `json:"allowedRead,omitempty"`
+	DeniedPaths  []string `json:"deniedPaths,omitempty"`
+	PassEnv      []string `json:"passEnv,omitempty"`
+	TmpSize      string   `json:"tmpSize,omitempty"`
+}
+
+// ContextFilesConfig represents context files settings
+type ContextFilesConfig struct {
+	Enabled    bool     `json:"enabled"`
+	ExtraFiles []string `json:"extraFiles,omitempty"`
+}
+
+// RetryConfig represents retry settings
+type RetryConfig struct {
+	Enabled      bool `json:"enabled"`
+	MaxRetries   int  `json:"maxRetries"`
+	BaseDelayMs  int  `json:"baseDelayMs"`
+}
+
+// ApprovalConfig represents approval settings
+type ApprovalConfig struct {
+	BashWhitelist []string `json:"bashWhitelist,omitempty"`
+	BashBlacklist []string `json:"bashBlacklist,omitempty"`
 }
 
 // ProviderConfig represents a provider configuration
@@ -60,6 +109,27 @@ func LoadVibeCodingSettings() (*VibeCodingSettings, error) {
 	}
 	
 	return &settings, nil
+}
+
+// SaveSettings saves settings to ~/.vibecoding/settings.json
+func SaveSettings(settings *VibeCodingSettings) error {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("get home dir: %w", err)
+	}
+	
+	configDir := filepath.Join(home, ".vibecoding")
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return fmt.Errorf("create config dir: %w", err)
+	}
+	
+	settingsPath := filepath.Join(configDir, "settings.json")
+	data, err := json.MarshalIndent(settings, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal settings: %w", err)
+	}
+	
+	return os.WriteFile(settingsPath, data, 0644)
 }
 
 // GetProviders returns list of available providers

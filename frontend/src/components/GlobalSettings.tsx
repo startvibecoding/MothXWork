@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { GetSettings } from '../../wailsjs/go/main/App'
+import { GetSettings, SaveSettings } from '../../wailsjs/go/main/App'
 import CustomSelect from './CustomSelect'
+import AdvancedSettings from './AdvancedSettings'
 
 interface Model {
   id: string
@@ -40,6 +41,8 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
   const [showAddProvider, setShowAddProvider] = useState(false)
   const [showAddModel, setShowAddModel] = useState<string | null>(null)
   const [hasChanges, setHasChanges] = useState(false)
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
+  const [advancedSettings, setAdvancedSettings] = useState<any>({})
 
   // Form states
   const [providerForm, setProviderForm] = useState({ id: '', apiKey: '', baseUrl: '', api: 'openai-chat' })
@@ -57,6 +60,21 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
     try {
       const s = await GetSettings()
       setSettings(s as unknown as Settings)
+      // Extract advanced settings
+      const advanced: any = {}
+      if ((s as any).compaction) advanced.compaction = (s as any).compaction
+      if ((s as any).sandbox) advanced.sandbox = (s as any).sandbox
+      if ((s as any).contextFiles) advanced.contextFiles = (s as any).contextFiles
+      if ((s as any).skillsDir) advanced.skillsDir = (s as any).skillsDir
+      if ((s as any).sessionDir) advanced.sessionDir = (s as any).sessionDir
+      if ((s as any).shellPath) advanced.shellPath = (s as any).shellPath
+      if ((s as any).shellCommandPrefix) advanced.shellCommandPrefix = (s as any).shellCommandPrefix
+      if ((s as any).theme) advanced.theme = (s as any).theme
+      if ((s as any).retry) advanced.retry = (s as any).retry
+      if ((s as any).approval) advanced.approval = (s as any).approval
+      if ((s as any).maxOutputTokens) advanced.maxOutputTokens = (s as any).maxOutputTokens
+      if ((s as any).maxContextTokens) advanced.maxContextTokens = (s as any).maxContextTokens
+      setAdvancedSettings(advanced)
     } catch (err) {
       console.error('Failed to load settings:', err)
       setError('Failed to load settings: ' + err)
@@ -69,13 +87,28 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
     if (!settings) return
     
     try {
-      // Save to file using backend API
-      // For now, we'll just close and reload
+      // Merge basic and advanced settings
+      const fullSettings = { ...settings, ...advancedSettings }
+      await SaveSettings(fullSettings as any)
       setHasChanges(false)
       onClose()
     } catch (err) {
       console.error('Failed to save settings:', err)
       setError('Failed to save settings: ' + err)
+    }
+  }
+
+  const handleAdvancedSettingsSave = async (newAdvancedSettings: any) => {
+    setAdvancedSettings(newAdvancedSettings)
+    setHasChanges(true)
+    // Save immediately
+    if (settings) {
+      try {
+        const fullSettings = { ...settings, ...newAdvancedSettings }
+        await SaveSettings(fullSettings as any)
+      } catch (err) {
+        console.error('Failed to save advanced settings:', err)
+      }
     }
   }
 
@@ -213,6 +246,12 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
             <p className="text-sm text-[#8E8E93] mt-1">~/.vibecoding/settings.json</p>
           </div>
           <div className="flex items-center space-x-3">
+            <button
+              className="px-4 py-2 bg-[#5856D6] hover:bg-[#4A48C9] rounded-lg text-white text-sm font-medium transition-colors"
+              onClick={() => setShowAdvancedSettings(true)}
+            >
+              ⚙️ 高级设置
+            </button>
             {hasChanges && (
               <button
                 className="px-4 py-2 bg-[#007AFF] hover:bg-[#0071E3] rounded-lg text-white text-sm font-medium transition-colors"
@@ -589,6 +628,14 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
           </div>
         </div>
       </div>
+
+      {/* Advanced Settings Modal */}
+      <AdvancedSettings
+        isOpen={showAdvancedSettings}
+        onClose={() => setShowAdvancedSettings(false)}
+        settings={advancedSettings}
+        onSave={handleAdvancedSettingsSave}
+      />
     </div>
   )
 }
