@@ -7,7 +7,8 @@ import {
   OpenDirectoryDialog,
   SaveSessionConfig,
   LoadSessionConfig,
-  RestoreSession
+  RestoreSession,
+  LoadUIConfig
 } from '../wailsjs/go/main/App'
 import { EventsOn } from '../wailsjs/runtime/runtime'
 import ChatArea from './components/ChatArea'
@@ -83,6 +84,7 @@ function App() {
     const unsubscribe = setupEventListeners()
     loadConfig()
     loadSessions()
+    loadTheme()
     
     // Cleanup on unmount
     return () => {
@@ -119,6 +121,17 @@ function App() {
       setConfig(cfg as Config)
     } catch (err) {
       console.error('Failed to load config:', err)
+    }
+  }
+
+  const loadTheme = async () => {
+    try {
+      const uiConfig = await LoadUIConfig()
+      if (uiConfig && uiConfig.theme) {
+        document.documentElement.setAttribute('data-theme', uiConfig.theme as string)
+      }
+    } catch (err) {
+      console.error('Failed to load theme:', err)
     }
   }
 
@@ -384,7 +397,7 @@ function App() {
       {/* Main Content */}
       <div className="flex flex-col flex-1">
         {/* Header */}
-        <div className="bg-[#1C1C1E] text-white px-6 py-3 border-b border-[#38383A]">
+        <div className="bg-secondary text-text-primary px-6 py-3 border-b border-separator">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               {currentSession ? (
@@ -392,7 +405,7 @@ function App() {
                   <input
                     ref={headerInputRef}
                     type="text"
-                    className="bg-transparent text-lg font-semibold text-white border-b border-white/50 outline-none w-full max-w-md"
+                    className="bg-transparent text-lg font-semibold text-text-primary border-b border-white/50 outline-none w-full max-w-md"
                     value={headerEditValue}
                     onChange={e => setHeaderEditValue(e.target.value)}
                     onBlur={saveHeaderRename}
@@ -404,7 +417,7 @@ function App() {
                   />
                 ) : (
                   <h1 
-                    className="text-lg font-semibold text-white cursor-pointer hover:text-white/80 transition-colors"
+                    className="text-lg font-semibold text-text-primary cursor-pointer hover:text-text-secondary transition-colors"
                     onDoubleClick={startHeaderRename}
                     title="双击重命名"
                   >
@@ -412,7 +425,7 @@ function App() {
                   </h1>
                 )
               ) : (
-                <h1 className="text-lg font-semibold text-white">VibeCoding GUI</h1>
+                <h1 className="text-lg font-semibold text-text-primary">VibeCoding GUI</h1>
               )}
             </div>
             <SessionSettings 

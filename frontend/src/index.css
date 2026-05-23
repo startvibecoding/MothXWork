@@ -3,11 +3,11 @@
 @tailwind utilities;
 
 :root {
-  /* Apple-style colors */
+  /* Dark theme (default) */
   --bg-primary: #1C1C1E;
   --bg-secondary: #2C2C2E;
   --bg-tertiary: #3A3A3C;
-  --bg-elevated: #3A3A3C;
+  --bg-elevated: #48484A;
   
   --text-primary: #FFFFFF;
   --text-secondary: #8E8E93;
@@ -22,6 +22,28 @@
   
   --separator: #38383A;
   --fill: #767680;
+}
+
+[data-theme="light"] {
+  /* Light theme */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F5F5F7;
+  --bg-tertiary: #E8E8ED;
+  --bg-elevated: #D2D2D7;
+  
+  --text-primary: #1D1D1F;
+  --text-secondary: #86868B;
+  --text-tertiary: #AEAEB2;
+  
+  --accent-blue: #007AFF;
+  --accent-green: #34C759;
+  --accent-red: #FF3B30;
+  --accent-orange: #FF9500;
+  --accent-yellow: #FFCC00;
+  --accent-purple: #AF52DE;
+  
+  --separator: #D2D2D7;
+  --fill: #C7C7CC;
 }
 
 * {
@@ -89,7 +111,7 @@ body {
 }
 
 .markdown-body pre {
-  background-color: #1C1C1E;
+  background-color: var(--bg-secondary);
   padding: 16px;
   border-radius: 8px;
   overflow-x: auto;

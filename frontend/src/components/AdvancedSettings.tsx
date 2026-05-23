@@ -167,24 +167,24 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] animate-fade-in">
-      <div className="bg-[#2C2C2E] rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl animate-slide-up">
+      <div className="bg-secondary rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl animate-slide-up">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[#38383A]">
+        <div className="flex items-center justify-between p-5 border-b border-separator">
           <div>
-            <h2 className="text-xl font-semibold text-white">高级设置</h2>
-            <p className="text-sm text-[#8E8E93] mt-1">Advanced Settings</p>
+            <h2 className="text-xl font-semibold text-text-primary">高级设置</h2>
+            <p className="text-sm text-text-secondary mt-1">Advanced Settings</p>
           </div>
           <div className="flex items-center space-x-3">
             {hasChanges && (
               <button
-                className="px-4 py-2 bg-[#007AFF] hover:bg-[#0071E3] rounded-lg text-white text-sm font-medium transition-colors"
+                className="px-4 py-2 bg-accent hover:bg-accent/90 rounded-lg text-white text-sm font-medium transition-colors"
                 onClick={handleSave}
               >
                 保存
               </button>
             )}
             <button 
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#3A3A3C] text-[#8E8E93] hover:text-white transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-tertiary text-text-secondary hover:text-text-primary transition-colors"
               onClick={onClose}
             >
               ✕
@@ -195,17 +195,17 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-5 space-y-6">
           {/* Compaction */}
-          <div className="bg-[#1C1C1E] rounded-xl p-4">
-            <h3 className="text-lg font-semibold text-white mb-4">上下文压缩 (Compaction)</h3>
+          <div className="bg-primary rounded-xl p-4">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">上下文压缩 (Compaction)</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-white">启用压缩</div>
-                  <div className="text-xs text-[#8E8E93]">管理长对话的上下文窗口</div>
+                  <div className="text-text-primary">启用压缩</div>
+                  <div className="text-xs text-text-secondary">管理长对话的上下文窗口</div>
                 </div>
                 <button
                   className={`w-12 h-6 rounded-full transition-colors ${
-                    formData.compaction?.enabled ? 'bg-[#34C759]' : 'bg-[#3A3A3C]'
+                    formData.compaction?.enabled ? 'bg-accent-green' : 'bg-tertiary'
                   }`}
                   onClick={() => updateField('compaction.enabled', !formData.compaction?.enabled)}
                 >
@@ -216,19 +216,19 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-[#8E8E93]">保留 Token 数</label>
+                  <label className="text-sm text-text-secondary">保留 Token 数</label>
                   <input
                     type="number"
-                    className="w-full bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm mt-1"
+                    className="w-full bg-secondary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm mt-1"
                     value={formData.compaction?.reserveTokens || 16384}
                     onChange={e => updateField('compaction.reserveTokens', parseInt(e.target.value) || 0)}
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-[#8E8E93]">保留最近消息 Token</label>
+                  <label className="text-sm text-text-secondary">保留最近消息 Token</label>
                   <input
                     type="number"
-                    className="w-full bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm mt-1"
+                    className="w-full bg-secondary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm mt-1"
                     value={formData.compaction?.keepRecentTokens || 20000}
                     onChange={e => updateField('compaction.keepRecentTokens', parseInt(e.target.value) || 0)}
                   />
@@ -238,17 +238,17 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
           </div>
 
           {/* Sandbox */}
-          <div className="bg-[#1C1C1E] rounded-xl p-4">
-            <h3 className="text-lg font-semibold text-white mb-4">沙箱 (Sandbox)</h3>
+          <div className="bg-primary rounded-xl p-4">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">沙箱 (Sandbox)</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-white">启用沙箱</div>
-                  <div className="text-xs text-[#8E8E93]">限制 bash 命令的访问权限</div>
+                  <div className="text-text-primary">启用沙箱</div>
+                  <div className="text-xs text-text-secondary">限制 bash 命令的访问权限</div>
                 </div>
                 <button
                   className={`w-12 h-6 rounded-full transition-colors ${
-                    formData.sandbox?.enabled ? 'bg-[#34C759]' : 'bg-[#3A3A3C]'
+                    formData.sandbox?.enabled ? 'bg-accent-green' : 'bg-tertiary'
                   }`}
                   onClick={() => updateField('sandbox.enabled', !formData.sandbox?.enabled)}
                 >
@@ -259,7 +259,7 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-[#8E8E93] block mb-1">沙箱级别</label>
+                  <label className="text-sm text-text-secondary block mb-1">沙箱级别</label>
                   <CustomSelect
                     value={formData.sandbox?.level || 'none'}
                     onChange={value => updateField('sandbox.level', value)}
@@ -268,10 +268,10 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-[#8E8E93]">临时目录大小</label>
+                  <label className="text-sm text-text-secondary">临时目录大小</label>
                   <input
                     type="text"
-                    className="w-full bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm mt-1"
+                    className="w-full bg-secondary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm mt-1"
                     value={formData.sandbox?.tmpSize || '100m'}
                     onChange={e => updateField('sandbox.tmpSize', e.target.value)}
                     placeholder="100m"
@@ -280,12 +280,12 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-white">允许网络访问</div>
-                  <div className="text-xs text-[#8E8E93]">沙箱内是否可以访问网络</div>
+                  <div className="text-text-primary">允许网络访问</div>
+                  <div className="text-xs text-text-secondary">沙箱内是否可以访问网络</div>
                 </div>
                 <button
                   className={`w-12 h-6 rounded-full transition-colors ${
-                    formData.sandbox?.allowNetwork ? 'bg-[#34C759]' : 'bg-[#3A3A3C]'
+                    formData.sandbox?.allowNetwork ? 'bg-accent-green' : 'bg-tertiary'
                   }`}
                   onClick={() => updateField('sandbox.allowNetwork', !formData.sandbox?.allowNetwork)}
                 >
@@ -297,13 +297,13 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
 
               {/* Allowed Read Paths */}
               <div>
-                <label className="text-sm text-[#8E8E93] mb-2 block">允许读取的路径</label>
+                <label className="text-sm text-text-secondary mb-2 block">允许读取的路径</label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {(formData.sandbox?.allowedRead || []).map((path, index) => (
-                    <span key={index} className="bg-[#2C2C2E] text-white text-xs px-2 py-1 rounded flex items-center">
+                    <span key={index} className="bg-secondary text-text-primary text-xs px-2 py-1 rounded flex items-center">
                       {path}
                       <button
-                        className="ml-1 text-[#FF3B30] hover:text-[#FF453A]"
+                        className="ml-1 text-accent-red hover:text-accent-red/90"
                         onClick={() => removeListItem('sandbox.allowedRead', index)}
                       >
                         ×
@@ -314,7 +314,7 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    className="flex-1 bg-[#2C2C2E] text-white rounded-lg px-3 py-1.5 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                    className="flex-1 bg-secondary text-text-primary rounded-lg px-3 py-1.5 border border-separator focus:border-accent outline-none text-sm"
                     value={newAllowedPath}
                     onChange={e => setNewAllowedPath(e.target.value)}
                     placeholder="/path/to/allow"
@@ -325,7 +325,7 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
                     }}
                   />
                   <button
-                    className="px-3 py-1.5 bg-[#34C759] hover:bg-[#30B350] rounded-lg text-white text-sm"
+                    className="px-3 py-1.5 bg-accent-green hover:bg-accent-green/90 rounded-lg text-white text-sm"
                     onClick={() => addListItem('sandbox.allowedRead', newAllowedPath, setNewAllowedPath)}
                   >
                     添加
@@ -335,13 +335,13 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
 
               {/* Denied Paths */}
               <div>
-                <label className="text-sm text-[#8E8E93] mb-2 block">拒绝的路径</label>
+                <label className="text-sm text-text-secondary mb-2 block">拒绝的路径</label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {(formData.sandbox?.deniedPaths || []).map((path, index) => (
-                    <span key={index} className="bg-[#FF3B30]/20 text-[#FF3B30] text-xs px-2 py-1 rounded flex items-center">
+                    <span key={index} className="bg-accent-red/20 text-accent-red text-xs px-2 py-1 rounded flex items-center">
                       {path}
                       <button
-                        className="ml-1 text-[#FF3B30] hover:text-[#FF453A]"
+                        className="ml-1 text-accent-red hover:text-accent-red/90"
                         onClick={() => removeListItem('sandbox.deniedPaths', index)}
                       >
                         ×
@@ -352,7 +352,7 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    className="flex-1 bg-[#2C2C2E] text-white rounded-lg px-3 py-1.5 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                    className="flex-1 bg-secondary text-text-primary rounded-lg px-3 py-1.5 border border-separator focus:border-accent outline-none text-sm"
                     value={newDeniedPath}
                     onChange={e => setNewDeniedPath(e.target.value)}
                     placeholder="/path/to/deny"
@@ -363,7 +363,7 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
                     }}
                   />
                   <button
-                    className="px-3 py-1.5 bg-[#FF3B30] hover:bg-[#FF453A] rounded-lg text-white text-sm"
+                    className="px-3 py-1.5 bg-accent-red hover:bg-accent-red/90 rounded-lg text-white text-sm"
                     onClick={() => addListItem('sandbox.deniedPaths', newDeniedPath, setNewDeniedPath)}
                   >
                     添加
@@ -373,13 +373,13 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
 
               {/* Pass Env */}
               <div>
-                <label className="text-sm text-[#8E8E93] mb-2 block">传递的环境变量</label>
+                <label className="text-sm text-text-secondary mb-2 block">传递的环境变量</label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {(formData.sandbox?.passEnv || []).map((env, index) => (
-                    <span key={index} className="bg-[#2C2C2E] text-white text-xs px-2 py-1 rounded flex items-center">
+                    <span key={index} className="bg-secondary text-text-primary text-xs px-2 py-1 rounded flex items-center">
                       {env}
                       <button
-                        className="ml-1 text-[#FF3B30] hover:text-[#FF453A]"
+                        className="ml-1 text-accent-red hover:text-accent-red/90"
                         onClick={() => removeListItem('sandbox.passEnv', index)}
                       >
                         ×
@@ -390,7 +390,7 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    className="flex-1 bg-[#2C2C2E] text-white rounded-lg px-3 py-1.5 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                    className="flex-1 bg-secondary text-text-primary rounded-lg px-3 py-1.5 border border-separator focus:border-accent outline-none text-sm"
                     value={newPassEnv}
                     onChange={e => setNewPassEnv(e.target.value)}
                     placeholder="ENV_VAR"
@@ -401,7 +401,7 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
                     }}
                   />
                   <button
-                    className="px-3 py-1.5 bg-[#007AFF] hover:bg-[#0071E3] rounded-lg text-white text-sm"
+                    className="px-3 py-1.5 bg-accent hover:bg-accent/90 rounded-lg text-white text-sm"
                     onClick={() => addListItem('sandbox.passEnv', newPassEnv, setNewPassEnv)}
                   >
                     添加
@@ -412,17 +412,17 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
           </div>
 
           {/* Context Files */}
-          <div className="bg-[#1C1C1E] rounded-xl p-4">
-            <h3 className="text-lg font-semibold text-white mb-4">上下文文件 (Context Files)</h3>
+          <div className="bg-primary rounded-xl p-4">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">上下文文件 (Context Files)</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-white">自动加载上下文文件</div>
-                  <div className="text-xs text-[#8E8E93]">自动搜索并加载 AGENTS.md、CLAUDE.md 等文件</div>
+                  <div className="text-text-primary">自动加载上下文文件</div>
+                  <div className="text-xs text-text-secondary">自动搜索并加载 AGENTS.md、CLAUDE.md 等文件</div>
                 </div>
                 <button
                   className={`w-12 h-6 rounded-full transition-colors ${
-                    formData.contextFiles?.enabled ? 'bg-[#34C759]' : 'bg-[#3A3A3C]'
+                    formData.contextFiles?.enabled ? 'bg-accent-green' : 'bg-tertiary'
                   }`}
                   onClick={() => updateField('contextFiles.enabled', !formData.contextFiles?.enabled)}
                 >
@@ -432,13 +432,13 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
                 </button>
               </div>
               <div>
-                <label className="text-sm text-[#8E8E93] mb-2 block">额外上下文文件</label>
+                <label className="text-sm text-text-secondary mb-2 block">额外上下文文件</label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {(formData.contextFiles?.extraFiles || []).map((file, index) => (
-                    <span key={index} className="bg-[#2C2C2E] text-white text-xs px-2 py-1 rounded flex items-center">
+                    <span key={index} className="bg-secondary text-text-primary text-xs px-2 py-1 rounded flex items-center">
                       {file}
                       <button
-                        className="ml-1 text-[#FF3B30] hover:text-[#FF453A]"
+                        className="ml-1 text-accent-red hover:text-accent-red/90"
                         onClick={() => removeListItem('contextFiles.extraFiles', index)}
                       >
                         ×
@@ -449,7 +449,7 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    className="flex-1 bg-[#2C2C2E] text-white rounded-lg px-3 py-1.5 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                    className="flex-1 bg-secondary text-text-primary rounded-lg px-3 py-1.5 border border-separator focus:border-accent outline-none text-sm"
                     value={newExtraFile}
                     onChange={e => setNewExtraFile(e.target.value)}
                     placeholder="/path/to/extra-context.md"
@@ -460,7 +460,7 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
                     }}
                   />
                   <button
-                    className="px-3 py-1.5 bg-[#34C759] hover:bg-[#30B350] rounded-lg text-white text-sm"
+                    className="px-3 py-1.5 bg-accent-green hover:bg-accent-green/90 rounded-lg text-white text-sm"
                     onClick={() => addListItem('contextFiles.extraFiles', newExtraFile, setNewExtraFile)}
                   >
                     添加
@@ -471,17 +471,17 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
           </div>
 
           {/* Retry */}
-          <div className="bg-[#1C1C1E] rounded-xl p-4">
-            <h3 className="text-lg font-semibold text-white mb-4">重试 (Retry)</h3>
+          <div className="bg-primary rounded-xl p-4">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">重试 (Retry)</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-white">启用重试</div>
-                  <div className="text-xs text-[#8E8E93]">API 调用失败时自动重试</div>
+                  <div className="text-text-primary">启用重试</div>
+                  <div className="text-xs text-text-secondary">API 调用失败时自动重试</div>
                 </div>
                 <button
                   className={`w-12 h-6 rounded-full transition-colors ${
-                    formData.retry?.enabled ? 'bg-[#34C759]' : 'bg-[#3A3A3C]'
+                    formData.retry?.enabled ? 'bg-accent-green' : 'bg-tertiary'
                   }`}
                   onClick={() => updateField('retry.enabled', !formData.retry?.enabled)}
                 >
@@ -492,19 +492,19 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-[#8E8E93]">最大重试次数</label>
+                  <label className="text-sm text-text-secondary">最大重试次数</label>
                   <input
                     type="number"
-                    className="w-full bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm mt-1"
+                    className="w-full bg-secondary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm mt-1"
                     value={formData.retry?.maxRetries || 3}
                     onChange={e => updateField('retry.maxRetries', parseInt(e.target.value) || 0)}
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-[#8E8E93]">基础延迟 (毫秒)</label>
+                  <label className="text-sm text-text-secondary">基础延迟 (毫秒)</label>
                   <input
                     type="number"
-                    className="w-full bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm mt-1"
+                    className="w-full bg-secondary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm mt-1"
                     value={formData.retry?.baseDelayMs || 2000}
                     onChange={e => updateField('retry.baseDelayMs', parseInt(e.target.value) || 0)}
                   />
@@ -514,17 +514,17 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
           </div>
 
           {/* Approval */}
-          <div className="bg-[#1C1C1E] rounded-xl p-4">
-            <h3 className="text-lg font-semibold text-white mb-4">审批 (Approval)</h3>
+          <div className="bg-primary rounded-xl p-4">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">审批 (Approval)</h3>
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-[#8E8E93] mb-2 block">Bash 白名单 (自动批准的命令)</label>
+                <label className="text-sm text-text-secondary mb-2 block">Bash 白名单 (自动批准的命令)</label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {(formData.approval?.bashWhitelist || []).map((cmd, index) => (
-                    <span key={index} className="bg-[#34C759]/20 text-[#34C759] text-xs px-2 py-1 rounded flex items-center">
+                    <span key={index} className="bg-accent-green/20 text-accent-green text-xs px-2 py-1 rounded flex items-center">
                       {cmd}
                       <button
-                        className="ml-1 text-[#FF3B30] hover:text-[#FF453A]"
+                        className="ml-1 text-accent-red hover:text-accent-red/90"
                         onClick={() => removeListItem('approval.bashWhitelist', index)}
                       >
                         ×
@@ -535,7 +535,7 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    className="flex-1 bg-[#2C2C2E] text-white rounded-lg px-3 py-1.5 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                    className="flex-1 bg-secondary text-text-primary rounded-lg px-3 py-1.5 border border-separator focus:border-accent outline-none text-sm"
                     value={newWhitelistItem}
                     onChange={e => setNewWhitelistItem(e.target.value)}
                     placeholder="git "
@@ -546,7 +546,7 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
                     }}
                   />
                   <button
-                    className="px-3 py-1.5 bg-[#34C759] hover:bg-[#30B350] rounded-lg text-white text-sm"
+                    className="px-3 py-1.5 bg-accent-green hover:bg-accent-green/90 rounded-lg text-white text-sm"
                     onClick={() => addListItem('approval.bashWhitelist', newWhitelistItem, setNewWhitelistItem)}
                   >
                     添加
@@ -554,13 +554,13 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
                 </div>
               </div>
               <div>
-                <label className="text-sm text-[#8E8E93] mb-2 block">Bash 黑名单 (始终需要审批)</label>
+                <label className="text-sm text-text-secondary mb-2 block">Bash 黑名单 (始终需要审批)</label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {(formData.approval?.bashBlacklist || []).map((cmd, index) => (
-                    <span key={index} className="bg-[#FF3B30]/20 text-[#FF3B30] text-xs px-2 py-1 rounded flex items-center">
+                    <span key={index} className="bg-accent-red/20 text-accent-red text-xs px-2 py-1 rounded flex items-center">
                       {cmd}
                       <button
-                        className="ml-1 text-[#FF3B30] hover:text-[#FF453A]"
+                        className="ml-1 text-accent-red hover:text-accent-red/90"
                         onClick={() => removeListItem('approval.bashBlacklist', index)}
                       >
                         ×
@@ -571,7 +571,7 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    className="flex-1 bg-[#2C2C2E] text-white rounded-lg px-3 py-1.5 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                    className="flex-1 bg-secondary text-text-primary rounded-lg px-3 py-1.5 border border-separator focus:border-accent outline-none text-sm"
                     value={newBlacklistItem}
                     onChange={e => setNewBlacklistItem(e.target.value)}
                     placeholder="rm -rf"
@@ -582,7 +582,7 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
                     }}
                   />
                   <button
-                    className="px-3 py-1.5 bg-[#FF3B30] hover:bg-[#FF453A] rounded-lg text-white text-sm"
+                    className="px-3 py-1.5 bg-accent-red hover:bg-accent-red/90 rounded-lg text-white text-sm"
                     onClick={() => addListItem('approval.bashBlacklist', newBlacklistItem, setNewBlacklistItem)}
                   >
                     添加
@@ -593,44 +593,44 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
           </div>
 
           {/* Paths and Shell */}
-          <div className="bg-[#1C1C1E] rounded-xl p-4">
-            <h3 className="text-lg font-semibold text-white mb-4">路径与 Shell</h3>
+          <div className="bg-primary rounded-xl p-4">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">路径与 Shell</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-[#8E8E93]">技能目录</label>
+                <label className="text-sm text-text-secondary">技能目录</label>
                 <input
                   type="text"
-                  className="w-full bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm mt-1"
+                  className="w-full bg-secondary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm mt-1"
                   value={formData.skillsDir || ''}
                   onChange={e => updateField('skillsDir', e.target.value)}
                   placeholder="~/.vibecoding/skills"
                 />
               </div>
               <div>
-                <label className="text-sm text-[#8E8E93]">会话目录</label>
+                <label className="text-sm text-text-secondary">会话目录</label>
                 <input
                   type="text"
-                  className="w-full bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm mt-1"
+                  className="w-full bg-secondary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm mt-1"
                   value={formData.sessionDir || ''}
                   onChange={e => updateField('sessionDir', e.target.value)}
                   placeholder="~/.vibecoding/sessions"
                 />
               </div>
               <div>
-                <label className="text-sm text-[#8E8E93]">Shell 路径</label>
+                <label className="text-sm text-text-secondary">Shell 路径</label>
                 <input
                   type="text"
-                  className="w-full bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm mt-1"
+                  className="w-full bg-secondary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm mt-1"
                   value={formData.shellPath || ''}
                   onChange={e => updateField('shellPath', e.target.value)}
                   placeholder="/bin/bash"
                 />
               </div>
               <div>
-                <label className="text-sm text-[#8E8E93]">命令前缀</label>
+                <label className="text-sm text-text-secondary">命令前缀</label>
                 <input
                   type="text"
-                  className="w-full bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm mt-1"
+                  className="w-full bg-secondary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm mt-1"
                   value={formData.shellCommandPrefix || ''}
                   onChange={e => updateField('shellCommandPrefix', e.target.value)}
                   placeholder=""
@@ -640,23 +640,23 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
           </div>
 
           {/* Token Limits */}
-          <div className="bg-[#1C1C1E] rounded-xl p-4">
-            <h3 className="text-lg font-semibold text-white mb-4">Token 限制</h3>
+          <div className="bg-primary rounded-xl p-4">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">Token 限制</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-[#8E8E93]">最大输出 Token</label>
+                <label className="text-sm text-text-secondary">最大输出 Token</label>
                 <input
                   type="number"
-                  className="w-full bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm mt-1"
+                  className="w-full bg-secondary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm mt-1"
                   value={formData.maxOutputTokens || 384000}
                   onChange={e => updateField('maxOutputTokens', parseInt(e.target.value) || 0)}
                 />
               </div>
               <div>
-                <label className="text-sm text-[#8E8E93]">最大上下文 Token</label>
+                <label className="text-sm text-text-secondary">最大上下文 Token</label>
                 <input
                   type="number"
-                  className="w-full bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm mt-1"
+                  className="w-full bg-secondary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm mt-1"
                   value={formData.maxContextTokens || 1000000}
                   onChange={e => updateField('maxContextTokens', parseInt(e.target.value) || 0)}
                 />
@@ -666,20 +666,20 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between items-center p-5 border-t border-[#38383A]">
-          <div className="text-sm text-[#8E8E93]">
-            {hasChanges && <span className="text-[#FF9500]">⚠️ 有未保存的更改</span>}
+        <div className="flex justify-between items-center p-5 border-t border-separator">
+          <div className="text-sm text-text-secondary">
+            {hasChanges && <span className="text-accent-orange">⚠️ 有未保存的更改</span>}
           </div>
           <div className="flex space-x-3">
             <button
-              className="px-4 py-2.5 bg-[#3A3A3C] hover:bg-[#48484A] rounded-xl text-white font-medium transition-colors"
+              className="px-4 py-2.5 bg-tertiary hover:bg-elevated rounded-xl text-text-primary font-medium transition-colors"
               onClick={onClose}
             >
               取消
             </button>
             {hasChanges && (
               <button
-                className="px-4 py-2.5 bg-[#007AFF] hover:bg-[#0071E3] rounded-xl text-white font-medium transition-colors"
+                className="px-4 py-2.5 bg-accent hover:bg-accent/90 rounded-xl text-white font-medium transition-colors"
                 onClick={handleSave}
               >
                 保存

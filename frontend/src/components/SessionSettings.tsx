@@ -57,14 +57,14 @@ function CustomSelect({
     <div className="relative" ref={ref}>
       <button
         type="button"
-        className="w-full bg-[#1C1C1E] text-white rounded-lg px-3 py-2.5 border border-[#38383A] hover:border-[#48484A] focus:border-[#007AFF] focus:ring-1 focus:ring-[#007AFF] outline-none text-sm text-left flex items-center justify-between"
+        className="w-full bg-primary text-text-primary rounded-lg px-3 py-2.5 border border-separator hover:border-elevated focus:border-accent focus:ring-1 focus:ring-accent outline-none text-sm text-left flex items-center justify-between"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className={selectedOption ? 'text-white' : 'text-[#636366]'}>
+        <span className={selectedOption ? 'text-text-primary' : 'text-text-tertiary'}>
           {selectedOption?.label || placeholder || 'Select...'}
         </span>
         <svg 
-          className={`w-4 h-4 text-[#8E8E93] transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+          className={`w-4 h-4 text-text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`} 
           fill="none" 
           stroke="currentColor" 
           viewBox="0 0 24 24"
@@ -74,15 +74,15 @@ function CustomSelect({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-[#2C2C2E] rounded-lg shadow-xl border border-[#38383A] max-h-60 overflow-auto">
+        <div className="absolute z-50 w-full mt-1 bg-secondary rounded-lg shadow-xl border border-separator max-h-60 overflow-auto">
           {options.map(option => (
             <button
               key={option.value}
               type="button"
-              className={`w-full px-3 py-2.5 text-sm text-left hover:bg-[#3A3A3C] transition-colors ${
+              className={`w-full px-3 py-2.5 text-sm text-left hover:bg-tertiary transition-colors ${
                 option.value === value 
-                  ? 'bg-[#007AFF]/20 text-[#007AFF]' 
-                  : 'text-white'
+                  ? 'bg-accent/20 text-accent' 
+                  : 'text-text-primary'
               }`}
               onClick={() => {
                 onChange(option.value)
@@ -168,9 +168,9 @@ export default function SessionSettings({ config, onConfigChange }: SessionSetti
     editConfig.thinking !== config.thinking
 
   const modes = [
-    { id: 'plan', name: 'Plan', icon: '🗒️', color: 'text-[#FFCC00]' },
-    { id: 'agent', name: 'Agent', icon: '🔧', color: 'text-[#34C759]' },
-    { id: 'yolo', name: 'YOLO', icon: '🚀', color: 'text-[#FF3B30]' },
+    { id: 'plan', name: 'Plan', icon: '🗒️', color: 'text-accent-yellow' },
+    { id: 'agent', name: 'Agent', icon: '🔧', color: 'text-accent-green' },
+    { id: 'yolo', name: 'YOLO', icon: '🚀', color: 'text-accent-red' },
   ]
 
   const thinkingLevels = [
@@ -201,17 +201,17 @@ export default function SessionSettings({ config, onConfigChange }: SessionSetti
     <div className="relative" ref={dropdownRef}>
       {/* Trigger Button */}
       <button
-        className="flex items-center space-x-2 bg-[#2C2C2E] hover:bg-[#3A3A3C] px-3 py-1.5 rounded-lg transition-colors"
+        className="flex items-center space-x-2 bg-secondary hover:bg-tertiary px-3 py-1.5 rounded-lg transition-colors"
         onClick={() => setIsOpen(!isOpen)}
       >
         <span className={currentMode?.color}>{currentMode?.icon}</span>
-        <span className="text-sm text-white font-medium">{currentMode?.name}</span>
-        <span className="text-[#38383A]">|</span>
-        <span className="text-sm text-[#8E8E93]">{config.provider}</span>
-        <span className="text-[#38383A]">|</span>
-        <span className="text-sm text-[#8E8E93]">{config.model}</span>
+        <span className="text-sm text-text-primary font-medium">{currentMode?.name}</span>
+        <span className="text-separator">|</span>
+        <span className="text-sm text-text-secondary">{config.provider}</span>
+        <span className="text-separator">|</span>
+        <span className="text-sm text-text-secondary">{config.model}</span>
         <svg 
-          className={`w-4 h-4 text-[#8E8E93] transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+          className={`w-4 h-4 text-text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`} 
           fill="none" 
           stroke="currentColor" 
           viewBox="0 0 24 24"
@@ -222,24 +222,24 @@ export default function SessionSettings({ config, onConfigChange }: SessionSetti
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-[#2C2C2E] rounded-xl shadow-2xl border border-[#38383A] z-50 animate-slide-up">
+        <div className="absolute right-0 top-full mt-2 w-80 bg-secondary rounded-xl shadow-2xl border border-separator z-50 animate-slide-up">
           <div className="p-4 space-y-4">
             {/* Mode */}
             <div>
-              <label className="block text-xs font-medium text-[#8E8E93] mb-2 uppercase">Mode</label>
+              <label className="block text-xs font-medium text-text-secondary mb-2 uppercase">Mode</label>
               <div className="flex space-x-2">
                 {modes.map(mode => (
                   <button
                     key={mode.id}
                     className={`flex-1 flex items-center justify-center p-2.5 rounded-lg transition-colors ${
                       editConfig.mode === mode.id
-                        ? 'bg-[#007AFF]/20 border border-[#007AFF]/50'
-                        : 'bg-[#1C1C1E] hover:bg-[#3A3A3C] border border-transparent'
+                        ? 'bg-accent/20 border border-accent/50'
+                        : 'bg-primary hover:bg-tertiary border border-transparent'
                     }`}
                     onClick={() => setEditConfig({ ...editConfig, mode: mode.id })}
                   >
                     <span className={`mr-1.5 ${mode.color}`}>{mode.icon}</span>
-                    <span className="text-sm text-white font-medium">{mode.name}</span>
+                    <span className="text-sm text-text-primary font-medium">{mode.name}</span>
                   </button>
                 ))}
               </div>
@@ -247,7 +247,7 @@ export default function SessionSettings({ config, onConfigChange }: SessionSetti
 
             {/* Provider */}
             <div>
-              <label className="block text-xs font-medium text-[#8E8E93] mb-2 uppercase">Provider</label>
+              <label className="block text-xs font-medium text-text-secondary mb-2 uppercase">Provider</label>
               <CustomSelect
                 value={editConfig.provider}
                 onChange={(value) => setEditConfig({ 
@@ -262,7 +262,7 @@ export default function SessionSettings({ config, onConfigChange }: SessionSetti
 
             {/* Model */}
             <div>
-              <label className="block text-xs font-medium text-[#8E8E93] mb-2 uppercase">Model</label>
+              <label className="block text-xs font-medium text-text-secondary mb-2 uppercase">Model</label>
               <CustomSelect
                 value={editConfig.model}
                 onChange={(value) => setEditConfig({ ...editConfig, model: value })}
@@ -273,15 +273,15 @@ export default function SessionSettings({ config, onConfigChange }: SessionSetti
 
             {/* Thinking Level */}
             <div>
-              <label className="block text-xs font-medium text-[#8E8E93] mb-2 uppercase">Thinking</label>
+              <label className="block text-xs font-medium text-text-secondary mb-2 uppercase">Thinking</label>
               <div className="flex flex-wrap gap-2">
                 {thinkingLevels.map(t => (
                   <button
                     key={t.id}
                     className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                       editConfig.thinking === t.id
-                        ? 'bg-[#007AFF] text-white'
-                        : 'bg-[#1C1C1E] hover:bg-[#3A3A3C] text-[#8E8E93]'
+                        ? 'bg-accent text-white'
+                        : 'bg-primary hover:bg-tertiary text-text-secondary'
                     }`}
                     onClick={() => setEditConfig({ ...editConfig, thinking: t.id })}
                   >
@@ -294,7 +294,7 @@ export default function SessionSettings({ config, onConfigChange }: SessionSetti
             {/* Apply Button */}
             {hasChanges && (
               <button
-                className="w-full py-2.5 bg-[#007AFF] hover:bg-[#0071E3] rounded-xl text-white text-sm font-medium transition-colors"
+                className="w-full py-2.5 bg-accent hover:bg-accent/90 rounded-xl text-white text-sm font-medium transition-colors"
                 onClick={handleApply}
               >
                 Apply & Restart Session

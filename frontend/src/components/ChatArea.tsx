@@ -25,8 +25,8 @@ const components: Components = {
     
     if (!isInline && match) {
       return (
-        <div className="my-3 rounded-lg overflow-hidden border border-[#38383A]">
-          <div className="bg-[#2C2C2E] px-4 py-2 text-xs text-[#8E8E93] border-b border-[#38383A]">
+        <div className="my-3 rounded-lg overflow-hidden border border-separator">
+          <div className="bg-secondary px-4 py-2 text-xs text-text-secondary border-b border-separator">
             {match[1]}
           </div>
           <SyntaxHighlighter
@@ -53,7 +53,7 @@ const components: Components = {
     }
     
     return (
-      <code className="bg-[#3A3A3C] px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
+      <code className="bg-tertiary px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
         {children}
       </code>
     )
@@ -100,10 +100,10 @@ export default function ChatArea({ messages, isLoading }: ChatAreaProps) {
         <div
           className={`max-w-[80%] rounded-2xl px-4 py-3 ${
             isUser
-              ? 'bg-[#007AFF] text-white'
+              ? 'bg-accent text-white'
               : isSystem
-              ? 'bg-[#FF9500]/20 text-[#FF9500] border border-[#FF9500]/30'
-              : 'bg-[#2C2C2E] text-white'
+              ? 'bg-accent-orange/20 text-accent-orange border border-accent-orange/30'
+              : 'bg-secondary text-text-primary'
           }`}
           style={{ 
             overflowWrap: 'break-word', 
@@ -125,7 +125,7 @@ export default function ChatArea({ messages, isLoading }: ChatAreaProps) {
             </div>
           )}
           <div className={`text-xs mt-2 ${
-            isUser ? 'text-white/60' : 'text-[#636366]'
+            isUser ? 'text-white/60' : 'text-text-tertiary'
           }`}>
             {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             {message.isStreaming && (
@@ -138,13 +138,13 @@ export default function ChatArea({ messages, isLoading }: ChatAreaProps) {
   }
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-y-auto p-6 bg-[#1C1C1E]">
+    <div ref={containerRef} className="flex-1 overflow-y-auto p-6 bg-primary">
       {messages.length === 0 ? (
         <div className="flex items-center justify-center h-full">
           <div className="text-center">
             <img src="/logo.svg" alt="VibeCoding" className="w-24 h-24 mx-auto mb-4" />
-            <h2 className="text-2xl font-semibold text-white mb-2">VibeCoding GUI</h2>
-            <p className="text-[#8E8E93] text-lg">Start a conversation to begin coding with AI</p>
+            <h2 className="text-2xl font-semibold text-text-primary mb-2">VibeCoding GUI</h2>
+            <p className="text-text-secondary text-lg">Start a conversation to begin coding with AI</p>
           </div>
         </div>
       ) : (
@@ -152,11 +152,11 @@ export default function ChatArea({ messages, isLoading }: ChatAreaProps) {
           {messages.map(renderMessage)}
           {isLoading && !messages.some(m => m.isStreaming) && (
             <div className="flex justify-start mb-4">
-              <div className="bg-[#2C2C2E] rounded-2xl px-4 py-3">
+              <div className="bg-secondary rounded-2xl px-4 py-3">
                 <div className="flex space-x-2">
-                  <div className="w-2 h-2 bg-[#8E8E93] rounded-full animate-bounce" />
-                  <div className="w-2 h-2 bg-[#8E8E93] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                  <div className="w-2 h-2 bg-[#8E8E93] rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+                  <div className="w-2 h-2 bg-text-secondary rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-text-secondary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                  <div className="w-2 h-2 bg-text-secondary rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
                 </div>
               </div>
             </div>

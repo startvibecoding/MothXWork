@@ -250,30 +250,30 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
-      <div className="bg-[#2C2C2E] rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl animate-slide-up">
+      <div className="bg-secondary rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl animate-slide-up">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-[#38383A]">
+        <div className="flex items-center justify-between p-5 border-b border-separator">
           <div>
-            <h2 className="text-xl font-semibold text-white">全局设置</h2>
-            <p className="text-sm text-[#8E8E93] mt-1">~/.vibecoding/settings.json</p>
+            <h2 className="text-xl font-semibold text-text-primary">全局设置</h2>
+            <p className="text-sm text-text-secondary mt-1">~/.vibecoding/settings.json</p>
           </div>
           <div className="flex items-center space-x-3">
             <button
-              className="px-4 py-2 bg-[#5856D6] hover:bg-[#4A48C9] rounded-lg text-white text-sm font-medium transition-colors"
+              className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/90 rounded-lg text-white text-sm font-medium transition-colors"
               onClick={() => setShowAdvancedSettings(true)}
             >
               ⚙️ 高级设置
             </button>
             {hasChanges && (
               <button
-                className="px-4 py-2 bg-[#007AFF] hover:bg-[#0071E3] rounded-lg text-white text-sm font-medium transition-colors"
+                className="px-4 py-2 bg-accent hover:bg-accent/90 rounded-lg text-white text-sm font-medium transition-colors"
                 onClick={handleSave}
               >
                 Save Changes
               </button>
             )}
             <button 
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#3A3A3C] text-[#8E8E93] hover:text-white transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-tertiary text-text-secondary hover:text-text-primary transition-colors"
               onClick={onClose}
             >
               ✕
@@ -285,19 +285,19 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
         <div className="flex-1 overflow-y-auto p-5">
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
-              <div className="text-[#8E8E93]">Loading settings...</div>
+              <div className="text-text-secondary">Loading settings...</div>
             </div>
           ) : error ? (
-            <div className="bg-[#FF3B30]/10 border border-[#FF3B30]/30 rounded-xl p-4">
-              <div className="text-[#FF3B30]">{error}</div>
+            <div className="bg-accent-red/10 border border-accent-red/30 rounded-xl p-4">
+              <div className="text-accent-red">{error}</div>
             </div>
           ) : settings ? (
             <div className="space-y-6">
               {/* Add Provider Button */}
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-white">Providers</h3>
+                <h3 className="text-lg font-semibold text-text-primary">Providers</h3>
                 <button
-                  className="px-4 py-2 bg-[#34C759] hover:bg-[#30B350] rounded-lg text-white text-sm font-medium transition-colors"
+                  className="px-4 py-2 bg-accent-green hover:bg-accent-green/90 rounded-lg text-white text-sm font-medium transition-colors"
                   onClick={() => setShowAddProvider(true)}
                 >
                   + Add Provider
@@ -306,13 +306,13 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
 
               {/* Add Provider Form */}
               {showAddProvider && (
-                <div className="bg-[#1C1C1E] rounded-xl p-4 border border-[#007AFF]/30">
-                  <h4 className="text-sm font-medium text-white mb-3">Add New Provider</h4>
+                <div className="bg-primary rounded-xl p-4 border border-accent/30">
+                  <h4 className="text-sm font-medium text-text-primary mb-3">Add New Provider</h4>
                   <div className="grid grid-cols-2 gap-3">
                     <input
                       type="text"
                       placeholder="Provider ID"
-                      className="bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                      className="bg-secondary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm"
                       value={providerForm.id}
                       onChange={e => setProviderForm({ ...providerForm, id: e.target.value })}
                     />
@@ -325,27 +325,27 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                     <input
                       type="text"
                       placeholder="API Key"
-                      className="bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                      className="bg-secondary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm"
                       value={providerForm.apiKey}
                       onChange={e => setProviderForm({ ...providerForm, apiKey: e.target.value })}
                     />
                     <input
                       type="text"
                       placeholder="Base URL"
-                      className="bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                      className="bg-secondary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm"
                       value={providerForm.baseUrl}
                       onChange={e => setProviderForm({ ...providerForm, baseUrl: e.target.value })}
                     />
                   </div>
                   <div className="flex justify-end space-x-2 mt-3">
                     <button
-                      className="px-3 py-1.5 bg-[#3A3A3C] hover:bg-[#48484A] rounded-lg text-white text-sm"
+                      className="px-3 py-1.5 bg-tertiary hover:bg-elevated rounded-lg text-text-primary text-sm"
                       onClick={() => setShowAddProvider(false)}
                     >
                       Cancel
                     </button>
                     <button
-                      className="px-3 py-1.5 bg-[#007AFF] hover:bg-[#0071E3] rounded-lg text-white text-sm"
+                      className="px-3 py-1.5 bg-accent hover:bg-accent/90 rounded-lg text-white text-sm"
                       onClick={handleAddProvider}
                     >
                       Add
@@ -357,22 +357,22 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
               {/* Providers List */}
               <div className="space-y-4">
                 {Object.entries(settings.providers).map(([id, provider]) => (
-                  <div key={id} className="bg-[#1C1C1E] rounded-xl p-4">
+                  <div key={id} className="bg-primary rounded-xl p-4">
                     {/* Provider Header */}
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
-                        <h4 className="font-medium text-white">{id}</h4>
-                        <span className="text-xs bg-[#3A3A3C] text-[#8E8E93] px-2 py-0.5 rounded">{provider.api}</span>
+                        <h4 className="font-medium text-text-primary">{id}</h4>
+                        <span className="text-xs bg-tertiary text-text-secondary px-2 py-0.5 rounded">{provider.api}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <button
-                          className="px-3 py-1.5 bg-[#3A3A3C] hover:bg-[#48484A] rounded-lg text-white text-xs"
+                          className="px-3 py-1.5 bg-tertiary hover:bg-elevated rounded-lg text-text-primary text-xs"
                           onClick={() => handleEditProvider(id)}
                         >
                           Edit
                         </button>
                         <button
-                          className="px-3 py-1.5 bg-[#FF3B30]/20 hover:bg-[#FF3B30]/30 rounded-lg text-[#FF3B30] text-xs"
+                          className="px-3 py-1.5 bg-accent-red/20 hover:bg-accent-red/30 rounded-lg text-accent-red text-xs"
                           onClick={() => handleDeleteProvider(id)}
                         >
                           Delete
@@ -382,32 +382,32 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
 
                     {/* Edit Provider Form */}
                     {editingProvider === id && (
-                      <div className="bg-[#2C2C2E] rounded-lg p-3 mb-3">
+                      <div className="bg-secondary rounded-lg p-3 mb-3">
                         <div className="grid grid-cols-2 gap-3">
                           <input
                             type="text"
                             placeholder="API Key"
-                            className="bg-[#1C1C1E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                            className="bg-primary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm"
                             value={providerForm.apiKey}
                             onChange={e => setProviderForm({ ...providerForm, apiKey: e.target.value })}
                           />
                           <input
                             type="text"
                             placeholder="Base URL"
-                            className="bg-[#1C1C1E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                            className="bg-primary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm"
                             value={providerForm.baseUrl}
                             onChange={e => setProviderForm({ ...providerForm, baseUrl: e.target.value })}
                           />
                         </div>
                         <div className="flex justify-end space-x-2 mt-3">
                           <button
-                            className="px-3 py-1.5 bg-[#3A3A3C] hover:bg-[#48484A] rounded-lg text-white text-xs"
+                            className="px-3 py-1.5 bg-tertiary hover:bg-elevated rounded-lg text-text-primary text-xs"
                             onClick={() => setEditingProvider(null)}
                           >
                             Cancel
                           </button>
                           <button
-                            className="px-3 py-1.5 bg-[#007AFF] hover:bg-[#0071E3] rounded-lg text-white text-xs"
+                            className="px-3 py-1.5 bg-accent hover:bg-accent/90 rounded-lg text-white text-xs"
                             onClick={handleUpdateProvider}
                           >
                             Save
@@ -417,16 +417,16 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                     )}
 
                     {/* Provider Info */}
-                    <div className="text-sm text-[#8E8E93] mb-3">
-                      <span className="text-[#636366]">Base URL:</span> {provider.baseUrl}
+                    <div className="text-sm text-text-secondary mb-3">
+                      <span className="text-text-tertiary">Base URL:</span> {provider.baseUrl}
                     </div>
 
                     {/* Models */}
                     <div>
                       <div className="flex justify-between items-center mb-2">
-                        <h5 className="text-xs font-medium text-[#636366] uppercase">Models</h5>
+                        <h5 className="text-xs font-medium text-text-tertiary uppercase">Models</h5>
                         <button
-                          className="text-xs text-[#007AFF] hover:text-[#0071E3]"
+                          className="text-xs text-accent hover:text-accent/90"
                           onClick={() => setShowAddModel(id)}
                         >
                           + Add Model
@@ -435,46 +435,46 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
 
                       {/* Add Model Form */}
                       {showAddModel === id && (
-                        <div className="bg-[#2C2C2E] rounded-lg p-3 mb-2">
+                        <div className="bg-secondary rounded-lg p-3 mb-2">
                           <div className="grid grid-cols-2 gap-3">
                             <input
                               type="text"
                               placeholder="Model ID"
-                              className="bg-[#1C1C1E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                              className="bg-primary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm"
                               value={modelForm.id}
                               onChange={e => setModelForm({ ...modelForm, id: e.target.value })}
                             />
                             <input
                               type="text"
                               placeholder="Model Name"
-                              className="bg-[#1C1C1E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                              className="bg-primary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm"
                               value={modelForm.name}
                               onChange={e => setModelForm({ ...modelForm, name: e.target.value })}
                             />
                             <input
                               type="number"
                               placeholder="Context Window"
-                              className="bg-[#1C1C1E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                              className="bg-primary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm"
                               value={modelForm.contextWindow}
                               onChange={e => setModelForm({ ...modelForm, contextWindow: parseInt(e.target.value) || 0 })}
                             />
                             <input
                               type="number"
                               placeholder="Max Tokens"
-                              className="bg-[#1C1C1E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                              className="bg-primary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm"
                               value={modelForm.maxTokens}
                               onChange={e => setModelForm({ ...modelForm, maxTokens: parseInt(e.target.value) || 0 })}
                             />
                           </div>
                           <div className="flex justify-end space-x-2 mt-3">
                             <button
-                              className="px-3 py-1.5 bg-[#3A3A3C] hover:bg-[#48484A] rounded-lg text-white text-xs"
+                              className="px-3 py-1.5 bg-tertiary hover:bg-elevated rounded-lg text-text-primary text-xs"
                               onClick={() => setShowAddModel(null)}
                             >
                               Cancel
                             </button>
                             <button
-                              className="px-3 py-1.5 bg-[#007AFF] hover:bg-[#0071E3] rounded-lg text-white text-xs"
+                              className="px-3 py-1.5 bg-accent hover:bg-accent/90 rounded-lg text-white text-xs"
                               onClick={() => handleAddModel(id)}
                             >
                               Add
@@ -485,33 +485,33 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
 
                       <div className="grid grid-cols-2 gap-2">
                         {provider.models.map(model => (
-                          <div key={model.id} className="bg-[#2C2C2E] rounded-lg p-3">
+                          <div key={model.id} className="bg-secondary rounded-lg p-3">
                             {/* Edit Model Form */}
                             {editingModel?.provider === id && editingModel.model?.id === model.id ? (
                               <div className="space-y-2">
                                 <input
                                   type="text"
                                   placeholder="Model ID"
-                                  className="w-full bg-[#1C1C1E] text-white rounded px-2 py-1 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                                  className="w-full bg-primary text-text-primary rounded px-2 py-1 border border-separator focus:border-accent outline-none text-sm"
                                   value={modelForm.id}
                                   onChange={e => setModelForm({ ...modelForm, id: e.target.value })}
                                 />
                                 <input
                                   type="text"
                                   placeholder="Model Name"
-                                  className="w-full bg-[#1C1C1E] text-white rounded px-2 py-1 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
+                                  className="w-full bg-primary text-text-primary rounded px-2 py-1 border border-separator focus:border-accent outline-none text-sm"
                                   value={modelForm.name}
                                   onChange={e => setModelForm({ ...modelForm, name: e.target.value })}
                                 />
                                 <div className="flex justify-end space-x-2">
                                   <button
-                                    className="px-2 py-1 bg-[#3A3A3C] rounded text-xs text-white"
+                                    className="px-2 py-1 bg-tertiary rounded text-xs text-text-primary"
                                     onClick={() => setEditingModel(null)}
                                   >
                                     Cancel
                                   </button>
                                   <button
-                                    className="px-2 py-1 bg-[#007AFF] rounded text-xs text-white"
+                                    className="px-2 py-1 bg-accent rounded text-xs text-white"
                                     onClick={handleUpdateModel}
                                   >
                                     Save
@@ -522,8 +522,8 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                               <>
                                 <div className="flex justify-between items-start">
                                   <div>
-                                    <div className="font-medium text-white text-sm">{model.name}</div>
-                                    <div className="text-xs text-[#8E8E93] mt-1">
+                                    <div className="font-medium text-text-primary text-sm">{model.name}</div>
+                                    <div className="text-xs text-text-secondary mt-1">
                                       {model.contextWindow >= 1000000 
                                         ? `${(model.contextWindow / 1000000).toFixed(0)}M tokens`
                                         : `${(model.contextWindow / 1000).toFixed(0)}K tokens`
@@ -532,13 +532,13 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                                   </div>
                                   <div className="flex space-x-1">
                                     <button
-                                      className="text-xs text-[#007AFF] hover:text-[#0071E3]"
+                                      className="text-xs text-accent hover:text-accent/90"
                                       onClick={() => handleEditModel(id, model)}
                                     >
                                       Edit
                                     </button>
                                     <button
-                                      className="text-xs text-[#FF3B30] hover:text-[#FF453A]"
+                                      className="text-xs text-accent-red hover:text-accent-red/90"
                                       onClick={() => handleDeleteModel(id, model.id)}
                                     >
                                       Del
@@ -557,10 +557,10 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
 
               {/* Default Settings */}
               <div>
-                <h3 className="text-lg font-semibold text-white mb-4">Default Settings</h3>
-                <div className="bg-[#1C1C1E] rounded-xl p-4 space-y-4">
+                <h3 className="text-lg font-semibold text-text-primary mb-4">Default Settings</h3>
+                <div className="bg-primary rounded-xl p-4 space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-[#8E8E93]">Default Provider</span>
+                    <span className="text-text-secondary">Default Provider</span>
                     <CustomSelect
                       value={settings.defaultProvider}
                       onChange={value => {
@@ -572,8 +572,8 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                       className="w-48"
                     />
                   </div>
-                  <div className="flex justify-between items-center border-t border-[#38383A] pt-4">
-                    <span className="text-[#8E8E93]">Default Model</span>
+                  <div className="flex justify-between items-center border-t border-separator pt-4">
+                    <span className="text-text-secondary">Default Model</span>
                     <CustomSelect
                       value={settings.defaultModel}
                       onChange={value => {
@@ -585,8 +585,8 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                       className="w-48"
                     />
                   </div>
-                  <div className="flex justify-between items-center border-t border-[#38383A] pt-4">
-                    <span className="text-[#8E8E93]">Default Mode</span>
+                  <div className="flex justify-between items-center border-t border-separator pt-4">
+                    <span className="text-text-secondary">Default Mode</span>
                     <CustomSelect
                       value={settings.defaultMode}
                       onChange={value => {
@@ -598,8 +598,8 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                       className="w-48"
                     />
                   </div>
-                  <div className="flex justify-between items-center border-t border-[#38383A] pt-4">
-                    <span className="text-[#8E8E93]">Default Thinking Level</span>
+                  <div className="flex justify-between items-center border-t border-separator pt-4">
+                    <span className="text-text-secondary">Default Thinking Level</span>
                     <CustomSelect
                       value={settings.defaultThinkingLevel}
                       onChange={value => {
@@ -611,10 +611,10 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                       className="w-48"
                     />
                   </div>
-                  <div className="flex justify-between items-center border-t border-[#38383A] pt-4">
+                  <div className="flex justify-between items-center border-t border-separator pt-4">
                     <div>
-                      <span className="text-[#8E8E93]">UI Theme</span>
-                      <div className="text-xs text-[#636366] mt-0.5">存储于 ~/.vibecoding-gui/ui.json</div>
+                      <span className="text-text-secondary">UI Theme</span>
+                      <div className="text-xs text-text-tertiary mt-0.5">存储于 ~/.vibecoding-gui/ui.json</div>
                     </div>
                     <CustomSelect
                       value={uiTheme}
@@ -634,20 +634,20 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between items-center p-5 border-t border-[#38383A]">
-          <div className="text-sm text-[#8E8E93]">
-            {hasChanges && <span className="text-[#FF9500]">⚠️ You have unsaved changes</span>}
+        <div className="flex justify-between items-center p-5 border-t border-separator">
+          <div className="text-sm text-text-secondary">
+            {hasChanges && <span className="text-accent-orange">⚠️ You have unsaved changes</span>}
           </div>
           <div className="flex space-x-3">
             <button
-              className="px-4 py-2.5 bg-[#3A3A3C] hover:bg-[#48484A] rounded-xl text-white font-medium transition-colors"
+              className="px-4 py-2.5 bg-tertiary hover:bg-elevated rounded-xl text-text-primary font-medium transition-colors"
               onClick={onClose}
             >
               Close
             </button>
             {hasChanges && (
               <button
-                className="px-4 py-2.5 bg-[#007AFF] hover:bg-[#0071E3] rounded-xl text-white font-medium transition-colors"
+                className="px-4 py-2.5 bg-accent hover:bg-accent/90 rounded-xl text-white font-medium transition-colors"
                 onClick={handleSave}
               >
                 Save Changes

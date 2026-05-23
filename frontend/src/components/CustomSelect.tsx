@@ -39,14 +39,14 @@ export default function CustomSelect({
     <div className={`relative ${className}`} ref={ref}>
       <button
         type="button"
-        className="w-full bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] hover:border-[#48484A] focus:border-[#007AFF] focus:ring-1 focus:ring-[#007AFF] outline-none text-sm text-left flex items-center justify-between"
+        className="w-full bg-secondary text-text-primary rounded-lg px-3 py-2 border border-separator hover:border-elevated focus:border-accent focus:ring-1 focus:ring-accent outline-none text-sm text-left flex items-center justify-between"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className={selectedOption ? 'text-white' : 'text-[#636366]'}>
+        <span className={selectedOption ? 'text-text-primary' : 'text-text-tertiary'}>
           {selectedOption?.label || placeholder}
         </span>
         <svg 
-          className={`w-4 h-4 text-[#8E8E93] transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+          className={`w-4 h-4 text-text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`} 
           fill="none" 
           stroke="currentColor" 
           viewBox="0 0 24 24"
@@ -56,15 +56,15 @@ export default function CustomSelect({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-[#2C2C2E] rounded-lg shadow-xl border border-[#38383A] max-h-60 overflow-auto">
+        <div className="absolute z-50 w-full mt-1 bg-secondary rounded-lg shadow-xl border border-separator max-h-60 overflow-auto">
           {options.map(option => (
             <button
               key={option.value}
               type="button"
-              className={`w-full px-3 py-2.5 text-sm text-left hover:bg-[#3A3A3C] transition-colors ${
+              className={`w-full px-3 py-2.5 text-sm text-left hover:bg-tertiary transition-colors ${
                 option.value === value 
-                  ? 'bg-[#007AFF]/20 text-[#007AFF]' 
-                  : 'text-white'
+                  ? 'bg-accent/20 text-accent' 
+                  : 'text-text-primary'
               }`}
               onClick={() => {
                 onChange(option.value)
