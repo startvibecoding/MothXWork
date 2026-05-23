@@ -173,7 +173,6 @@ export namespace vibecoding {
 	    sessionDir?: string;
 	    shellPath?: string;
 	    shellCommandPrefix?: string;
-	    theme?: string;
 	    retry?: RetryConfig;
 	    approval?: ApprovalConfig;
 	
@@ -197,7 +196,6 @@ export namespace vibecoding {
 	        this.sessionDir = source["sessionDir"];
 	        this.shellPath = source["shellPath"];
 	        this.shellCommandPrefix = source["shellCommandPrefix"];
-	        this.theme = source["theme"];
 	        this.retry = this.convertValues(source["retry"], RetryConfig);
 	        this.approval = this.convertValues(source["approval"], ApprovalConfig);
 	    }

@@ -34,6 +34,10 @@ export function LoadSessionConfig() {
   return window['go']['main']['App']['LoadSessionConfig']();
 }
 
+export function LoadUIConfig() {
+  return window['go']['main']['App']['LoadUIConfig']();
+}
+
 export function OpenDirectoryDialog() {
   return window['go']['main']['App']['OpenDirectoryDialog']();
 }
@@ -52,6 +56,10 @@ export function SaveSessionConfig(arg1) {
 
 export function SaveSettings(arg1) {
   return window['go']['main']['App']['SaveSettings'](arg1);
+}
+
+export function SaveUIConfig(arg1) {
+  return window['go']['main']['App']['SaveUIConfig'](arg1);
 }
 
 export function SendMessage(arg1, arg2) {

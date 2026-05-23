@@ -23,7 +23,6 @@ type VibeCodingSettings struct {
 	SessionDir           string                     `json:"sessionDir,omitempty"`
 	ShellPath            string                     `json:"shellPath,omitempty"`
 	ShellCommandPrefix   string                     `json:"shellCommandPrefix,omitempty"`
-	Theme                string                     `json:"theme,omitempty"`
 	Retry                *RetryConfig               `json:"retry,omitempty"`
 	Approval             *ApprovalConfig            `json:"approval,omitempty"`
 }

@@ -221,6 +221,51 @@ func (a *App) LoadSessionConfig() ([]map[string]interface{}, error) {
 	return sessions, nil
 }
 
+// LoadUIConfig loads UI configuration from ~/.vibecoding-gui/ui.json
+func (a *App) LoadUIConfig() (map[string]interface{}, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("get home dir: %w", err)
+	}
+	
+	configPath := filepath.Join(home, ".vibecoding-gui", "ui.json")
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return map[string]interface{}{"theme": "dark"}, nil
+		}
+		return nil, fmt.Errorf("read config: %w", err)
+	}
+	
+	var config map[string]interface{}
+	if err := json.Unmarshal(data, &config); err != nil {
+		return nil, fmt.Errorf("parse config: %w", err)
+	}
+	
+	return config, nil
+}
+
+// SaveUIConfig saves UI configuration to ~/.vibecoding-gui/ui.json
+func (a *App) SaveUIConfig(config map[string]interface{}) error {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("get home dir: %w", err)
+	}
+	
+	configDir := filepath.Join(home, ".vibecoding-gui")
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return fmt.Errorf("create config dir: %w", err)
+	}
+	
+	configPath := filepath.Join(configDir, "ui.json")
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal config: %w", err)
+	}
+	
+	return os.WriteFile(configPath, data, 0644)
+}
+
 // findVibeCodingBinary finds the VibeCoding binary
 func findVibeCodingBinary() string {
 	// Check common locations

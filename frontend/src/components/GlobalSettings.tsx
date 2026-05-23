@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { GetSettings, SaveSettings } from '../../wailsjs/go/main/App'
+import { GetSettings, SaveSettings, LoadUIConfig, SaveUIConfig } from '../../wailsjs/go/main/App'
 import CustomSelect from './CustomSelect'
 import AdvancedSettings from './AdvancedSettings'
 
@@ -43,6 +43,7 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
   const [hasChanges, setHasChanges] = useState(false)
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
   const [advancedSettings, setAdvancedSettings] = useState<any>({})
+  const [uiTheme, setUiTheme] = useState<string>('dark')
 
   // Form states
   const [providerForm, setProviderForm] = useState({ id: '', apiKey: '', baseUrl: '', api: 'openai-chat' })
@@ -58,9 +59,13 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
     setIsLoading(true)
     setError(null)
     try {
-      const s = await GetSettings()
+      const [s, uiConfig] = await Promise.all([GetSettings(), LoadUIConfig()])
       setSettings(s as unknown as Settings)
-      // Extract advanced settings
+      // Set UI theme
+      if (uiConfig && uiConfig.theme) {
+        setUiTheme(uiConfig.theme as string)
+      }
+      // Extract advanced settings (exclude theme)
       const advanced: any = {}
       if ((s as any).compaction) advanced.compaction = (s as any).compaction
       if ((s as any).sandbox) advanced.sandbox = (s as any).sandbox
@@ -69,7 +74,6 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
       if ((s as any).sessionDir) advanced.sessionDir = (s as any).sessionDir
       if ((s as any).shellPath) advanced.shellPath = (s as any).shellPath
       if ((s as any).shellCommandPrefix) advanced.shellCommandPrefix = (s as any).shellCommandPrefix
-      if ((s as any).theme) advanced.theme = (s as any).theme
       if ((s as any).retry) advanced.retry = (s as any).retry
       if ((s as any).approval) advanced.approval = (s as any).approval
       if ((s as any).maxOutputTokens) advanced.maxOutputTokens = (s as any).maxOutputTokens
@@ -87,9 +91,11 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
     if (!settings) return
     
     try {
-      // Merge basic and advanced settings
+      // Save VibeCoding settings (without theme)
       const fullSettings = { ...settings, ...advancedSettings }
       await SaveSettings(fullSettings as any)
+      // Save UI theme separately
+      await SaveUIConfig({ theme: uiTheme })
       setHasChanges(false)
       onClose()
     } catch (err) {
@@ -100,7 +106,6 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
 
   const handleAdvancedSettingsSave = async (newAdvancedSettings: any) => {
     setAdvancedSettings(newAdvancedSettings)
-    setHasChanges(true)
     // Save immediately
     if (settings) {
       try {
@@ -110,6 +115,13 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
         console.error('Failed to save advanced settings:', err)
       }
     }
+  }
+
+  const handleThemeChange = async (theme: string) => {
+    setUiTheme(theme)
+    setHasChanges(true)
+    // Apply theme immediately
+    document.documentElement.setAttribute('data-theme', theme)
   }
 
   // Provider CRUD
@@ -596,6 +608,22 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                       }}
                       options={thinkingOptions}
                       placeholder="Select thinking level..."
+                      className="w-48"
+                    />
+                  </div>
+                  <div className="flex justify-between items-center border-t border-[#38383A] pt-4">
+                    <div>
+                      <span className="text-[#8E8E93]">UI Theme</span>
+                      <div className="text-xs text-[#636366] mt-0.5">存储于 ~/.vibecoding-gui/ui.json</div>
+                    </div>
+                    <CustomSelect
+                      value={uiTheme}
+                      onChange={value => handleThemeChange(value)}
+                      options={[
+                        { value: 'dark', label: '深色' },
+                        { value: 'light', label: '浅色' }
+                      ]}
+                      placeholder="Select theme..."
                       className="w-48"
                     />
                   </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import CustomSelect from './CustomSelect'
 
 interface CompactionConfig {
   enabled: boolean
@@ -32,7 +33,7 @@ interface ApprovalConfig {
   bashBlacklist?: string[]
 }
 
-interface AdvancedSettingsData {
+export interface AdvancedSettingsData {
   maxOutputTokens?: number
   maxContextTokens?: number
   compaction?: CompactionConfig
@@ -42,7 +43,6 @@ interface AdvancedSettingsData {
   sessionDir?: string
   shellPath?: string
   shellCommandPrefix?: string
-  theme?: string
   retry?: RetryConfig
   approval?: ApprovalConfig
 }
@@ -259,16 +259,13 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-[#8E8E93]">沙箱级别</label>
-                  <select
-                    className="w-full bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm mt-1"
+                  <label className="text-sm text-[#8E8E93] block mb-1">沙箱级别</label>
+                  <CustomSelect
                     value={formData.sandbox?.level || 'none'}
-                    onChange={e => updateField('sandbox.level', e.target.value)}
-                  >
-                    {sandboxLevelOptions.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
+                    onChange={value => updateField('sandbox.level', value)}
+                    options={sandboxLevelOptions}
+                    placeholder="Select level..."
+                  />
                 </div>
                 <div>
                   <label className="text-sm text-[#8E8E93]">临时目录大小</label>
@@ -664,25 +661,6 @@ export default function AdvancedSettings({ isOpen, onClose, settings, onSave }: 
                   onChange={e => updateField('maxContextTokens', parseInt(e.target.value) || 0)}
                 />
               </div>
-            </div>
-          </div>
-
-          {/* Theme */}
-          <div className="bg-[#1C1C1E] rounded-xl p-4">
-            <h3 className="text-lg font-semibold text-white mb-4">主题</h3>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-white">UI 主题</div>
-                <div className="text-xs text-[#8E8E93]">选择界面主题</div>
-              </div>
-              <select
-                className="bg-[#2C2C2E] text-white rounded-lg px-3 py-2 border border-[#38383A] focus:border-[#007AFF] outline-none text-sm"
-                value={formData.theme || 'dark'}
-                onChange={e => updateField('theme', e.target.value)}
-              >
-                <option value="dark">深色</option>
-                <option value="light">浅色</option>
-              </select>
             </div>
           </div>
         </div>

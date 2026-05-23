@@ -18,6 +18,8 @@ export function Greet(arg1:string):Promise<string>;
 
 export function LoadSessionConfig():Promise<Array<Record<string, any>>>;
 
+export function LoadUIConfig():Promise<Record<string, any>>;
+
 export function OpenDirectoryDialog():Promise<string>;
 
 export function OpenFileDialog():Promise<string>;
@@ -27,6 +29,8 @@ export function RestoreSession(arg1:string):Promise<string>;
 export function SaveSessionConfig(arg1:Array<Record<string, any>>):Promise<void>;
 
 export function SaveSettings(arg1:vibecoding.VibeCodingSettings):Promise<void>;
+
+export function SaveUIConfig(arg1:Record<string, any>):Promise<void>;
 
 export function SendMessage(arg1:string,arg2:string):Promise<void>;
 
