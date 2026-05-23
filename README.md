@@ -10,6 +10,7 @@ A desktop GUI client for VibeCoding built with Wails, React, and TypeScript.
 - ⚙️ Provider and model selection
 - 🛡️ Mode switching (Plan/Agent/YOLO)
 - 📁 Session management with working directory
+- 💾 Session persistence across app restarts
 - 🔐 Permission dialog for bash commands
 - 🎨 Apple-style dark theme
 
@@ -52,6 +53,9 @@ vibecoding-gui/
 │       ├── acp_client.go       # ACP protocol client
 │       ├── agent.go            # Agent manager
 │       └── settings.go         # Settings loader
+├── build/
+│   ├── appicon.png             # App icon (VibeCoding logo)
+│   └── windows/icon.ico        # Windows icon
 └── frontend/
     └── src/
         ├── App.tsx             # Main component
@@ -73,6 +77,30 @@ Uses ACP (Agent Client Protocol) to communicate with VibeCoding via stdin/stdout
 ```
 GUI ←→ ACP Client ←→ VibeCoding (acp mode)
 ```
+
+## Session Management
+
+The GUI manages session metadata (aliases, working directories), while chat history is handled by VibeCoding's sessions themselves.
+
+### Data Storage
+
+- **Session metadata**: `~/.vibecoding-gui/sessions.json`
+- **Stores**: Session ID, name (alias), working directory, creation time
+- **Does NOT store**: Chat history (managed by VibeCoding)
+
+### Startup Flow
+
+1. Load saved session list from `sessions.json`
+2. Restore the last session by creating a new ACP session with the saved working directory
+3. Update session ID (changes on each restart) and save to config
+4. Set current session and working directory
+
+### Session Operations
+
+- **Create**: Select working directory → Create ACP session → Save to config
+- **Rename**: Update session name → Save to config
+- **Delete**: Remove from list → Save to config
+- **Switch**: Set current session and working directory
 
 ## Configuration
 

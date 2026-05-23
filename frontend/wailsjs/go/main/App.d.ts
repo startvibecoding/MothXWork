@@ -16,13 +16,15 @@ export function GetSettings():Promise<vibecoding.VibeCodingSettings>;
 
 export function Greet(arg1:string):Promise<string>;
 
-export function LoadSessionConfig():Promise<Array<Record<string, string>>>;
+export function LoadSessionConfig():Promise<Array<Record<string, any>>>;
 
 export function OpenDirectoryDialog():Promise<string>;
 
 export function OpenFileDialog():Promise<string>;
 
-export function SaveSessionConfig(arg1:Array<Record<string, string>>):Promise<void>;
+export function RestoreSession(arg1:string):Promise<string>;
+
+export function SaveSessionConfig(arg1:Array<Record<string, any>>):Promise<void>;
 
 export function SendMessage(arg1:string,arg2:string):Promise<void>;
 

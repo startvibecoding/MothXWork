@@ -6,7 +6,8 @@ import {
   GetConfig,
   OpenDirectoryDialog,
   SaveSessionConfig,
-  LoadSessionConfig
+  LoadSessionConfig,
+  RestoreSession
 } from '../wailsjs/go/main/App'
 import { EventsOn } from '../wailsjs/runtime/runtime'
 import ChatArea from './components/ChatArea'
@@ -30,6 +31,7 @@ interface Session {
   name: string
   cwd: string
   isActive: boolean
+  createdAt?: string
 }
 
 interface Config {
@@ -70,6 +72,9 @@ function App() {
     mode: 'agent',
     thinking: 'medium'
   })
+  const [editingHeaderName, setEditingHeaderName] = useState(false)
+  const [headerEditValue, setHeaderEditValue] = useState('')
+  const headerInputRef = useRef<HTMLInputElement>(null)
   const streamingMessageRef = useRef<string>('')
   const streamingMessageIdRef = useRef<string | null>(null)
 
@@ -121,10 +126,31 @@ function App() {
     try {
       const savedSessions = await LoadSessionConfig()
       if (savedSessions && Array.isArray(savedSessions) && savedSessions.length > 0) {
-        setSessions(savedSessions as unknown as Session[])
-        // Select the first session
-        setCurrentSession(savedSessions[0].id)
-        setIsConnected(true)
+        const sessionsWithDefaults = (savedSessions as unknown as Session[]).map(s => ({
+          ...s,
+          name: s.name || s.id
+        }))
+        
+        // Restore the last session: create a fresh ACP session with the saved cwd
+        const lastSession = sessionsWithDefaults[sessionsWithDefaults.length - 1]
+        try {
+          const newSessionId = await RestoreSession(lastSession.cwd)
+          // Update the session with the new live ID
+          const updatedSessions = sessionsWithDefaults.map(s => 
+            s.id === lastSession.id ? { ...s, id: newSessionId } : s
+          )
+          setSessions(updatedSessions)
+          setCurrentSession(newSessionId)
+          setConfig(prev => ({ ...prev, cwd: lastSession.cwd }))
+          setIsConnected(true)
+          // Save updated sessions with new ID
+          await SaveSessionConfig(updatedSessions as any)
+        } catch (err) {
+          console.error('Failed to restore session:', err)
+          // Fallback: show sessions but not connected
+          setSessions(sessionsWithDefaults)
+          setCurrentSession(sessionsWithDefaults[sessionsWithDefaults.length - 1].id)
+        }
       }
     } catch (err) {
       console.error('Failed to load sessions:', err)
@@ -274,9 +300,10 @@ function App() {
       const sessionId = await CreateSession()
       const newSession: Session = {
         id: sessionId,
-        name: `Session ${sessions.length + 1}`,
+        name: sessionId, // Default name is sessionID
         cwd: cwd,
-        isActive: true
+        isActive: true,
+        createdAt: new Date().toISOString()
       }
       
       const newSessions = [...sessions, newSession]
@@ -292,12 +319,12 @@ function App() {
   }
 
   const handleSelectSession = (sessionId: string) => {
+    const session = sessions.find(s => s.id === sessionId)
+    if (!session) return
+    
     setCurrentSession(sessionId)
     setMessages([])
-    const session = sessions.find(s => s.id === sessionId)
-    if (session) {
-      setConfig(prev => ({ ...prev, cwd: session.cwd }))
-    }
+    setConfig(prev => ({ ...prev, cwd: session.cwd }))
   }
 
   const handleRenameSession = async (sessionId: string, newName: string) => {
@@ -305,6 +332,37 @@ function App() {
       s.id === sessionId ? { ...s, name: newName } : s
     )
     await saveSessions(newSessions)
+  }
+
+  const handleDeleteSession = async (sessionId: string) => {
+    const newSessions = sessions.filter(s => s.id !== sessionId)
+    await saveSessions(newSessions)
+    
+    if (currentSession === sessionId) {
+      if (newSessions.length > 0) {
+        setCurrentSession(newSessions[newSessions.length - 1].id)
+      } else {
+        setCurrentSession(null)
+        setIsConnected(false)
+      }
+      setMessages([])
+    }
+  }
+
+  const startHeaderRename = () => {
+    const session = sessions.find(s => s.id === currentSession)
+    if (session) {
+      setEditingHeaderName(true)
+      setHeaderEditValue(session.name)
+      setTimeout(() => headerInputRef.current?.focus(), 0)
+    }
+  }
+
+  const saveHeaderRename = async () => {
+    if (currentSession && headerEditValue.trim()) {
+      await handleRenameSession(currentSession, headerEditValue.trim())
+    }
+    setEditingHeaderName(false)
   }
 
   const handleConfigChange = (newConfig: Config) => {
@@ -319,7 +377,7 @@ function App() {
         currentSession={currentSession}
         onNewSession={handleNewSession}
         onSelectSession={handleSelectSession}
-        onRenameSession={handleRenameSession}
+        onDeleteSession={handleDeleteSession}
         onOpenSettings={() => setIsGlobalSettingsOpen(true)}
       />
 
@@ -328,8 +386,34 @@ function App() {
         {/* Header */}
         <div className="bg-[#1C1C1E] text-white px-6 py-3 border-b border-[#38383A]">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-semibold text-white">VibeCoding GUI</h1>
+            <div className="flex-1">
+              {currentSession ? (
+                editingHeaderName ? (
+                  <input
+                    ref={headerInputRef}
+                    type="text"
+                    className="bg-transparent text-lg font-semibold text-white border-b border-white/50 outline-none w-full max-w-md"
+                    value={headerEditValue}
+                    onChange={e => setHeaderEditValue(e.target.value)}
+                    onBlur={saveHeaderRename}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') saveHeaderRename()
+                      if (e.key === 'Escape') setEditingHeaderName(false)
+                    }}
+                    autoFocus
+                  />
+                ) : (
+                  <h1 
+                    className="text-lg font-semibold text-white cursor-pointer hover:text-white/80 transition-colors"
+                    onDoubleClick={startHeaderRename}
+                    title="双击重命名"
+                  >
+                    {sessions.find(s => s.id === currentSession)?.name || 'VibeCoding GUI'}
+                  </h1>
+                )
+              ) : (
+                <h1 className="text-lg font-semibold text-white">VibeCoding GUI</h1>
+              )}
             </div>
             <SessionSettings 
               config={config} 

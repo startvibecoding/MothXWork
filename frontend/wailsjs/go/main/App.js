@@ -42,6 +42,10 @@ export function OpenFileDialog() {
   return window['go']['main']['App']['OpenFileDialog']();
 }
 
+export function RestoreSession(arg1) {
+  return window['go']['main']['App']['RestoreSession'](arg1);
+}
+
 export function SaveSessionConfig(arg1) {
   return window['go']['main']['App']['SaveSessionConfig'](arg1);
 }

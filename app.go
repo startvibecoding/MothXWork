@@ -106,6 +106,12 @@ func (a *App) CreateSession() (string, error) {
 	return a.agent.CreateSession()
 }
 
+// RestoreSession creates a new ACP session with the specified cwd
+// Used to restore a saved session on app restart
+func (a *App) RestoreSession(cwd string) (string, error) {
+	return a.agent.CreateSessionWithCwd(cwd)
+}
+
 // SendMessage sends a message and streams response
 func (a *App) SendMessage(sessionID, message string) error {
 	events, err := a.agent.Chat(a.ctx, sessionID, message)
@@ -162,7 +168,7 @@ func (a *App) OpenDirectoryDialog() (string, error) {
 }
 
 // SaveSessionConfig saves session configuration
-func (a *App) SaveSessionConfig(sessions []map[string]string) error {
+func (a *App) SaveSessionConfig(sessions []map[string]interface{}) error {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return fmt.Errorf("get home dir: %w", err)
@@ -183,7 +189,7 @@ func (a *App) SaveSessionConfig(sessions []map[string]string) error {
 }
 
 // LoadSessionConfig loads session configuration
-func (a *App) LoadSessionConfig() ([]map[string]string, error) {
+func (a *App) LoadSessionConfig() ([]map[string]interface{}, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return nil, fmt.Errorf("get home dir: %w", err)
@@ -193,12 +199,12 @@ func (a *App) LoadSessionConfig() ([]map[string]string, error) {
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return []map[string]string{}, nil
+			return []map[string]interface{}{}, nil
 		}
 		return nil, fmt.Errorf("read config: %w", err)
 	}
 	
-	var sessions []map[string]string
+	var sessions []map[string]interface{}
 	if err := json.Unmarshal(data, &sessions); err != nil {
 		return nil, fmt.Errorf("parse config: %w", err)
 	}

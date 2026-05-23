@@ -51,15 +51,19 @@ func NewAgentManager(vibecodingPath string, config *SessionConfig) (*AgentManage
 	return am, nil
 }
 
-// CreateSession creates a new session
+// CreateSession creates a new session with current working directory
 func (am *AgentManager) CreateSession() (string, error) {
-	am.mu.Lock()
-	defer am.mu.Unlock()
-	
 	cwd, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
+	return am.CreateSessionWithCwd(cwd)
+}
+
+// CreateSessionWithCwd creates a new session with specified working directory
+func (am *AgentManager) CreateSessionWithCwd(cwd string) (string, error) {
+	am.mu.Lock()
+	defer am.mu.Unlock()
 	
 	sessionID, err := am.client.NewSession(cwd)
 	if err != nil {
