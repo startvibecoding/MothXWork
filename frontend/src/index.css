@@ -1,0 +1,210 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Apple-style colors */
+  --bg-primary: #1C1C1E;
+  --bg-secondary: #2C2C2E;
+  --bg-tertiary: #3A3A3C;
+  --bg-elevated: #3A3A3C;
+  
+  --text-primary: #FFFFFF;
+  --text-secondary: #8E8E93;
+  --text-tertiary: #636366;
+  
+  --accent-blue: #007AFF;
+  --accent-green: #34C759;
+  --accent-red: #FF3B30;
+  --accent-orange: #FF9500;
+  --accent-yellow: #FFCC00;
+  --accent-purple: #AF52DE;
+  
+  --separator: #38383A;
+  --fill: #767680;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100vh;
+}
+
+/* Custom scrollbar - Apple style */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--fill);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Selection color */
+::selection {
+  background: rgba(0, 122, 255, 0.3);
+}
+
+/* Focus styles */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* Markdown styles - Apple style */
+.markdown-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.markdown-body pre {
+  background-color: #1C1C1E;
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 12px 0;
+  border: 1px solid var(--separator);
+  max-width: 100%;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+.markdown-body code {
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-size: 13px;
+}
+
+.markdown-body p {
+  margin-bottom: 12px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.markdown-body ul, .markdown-body ol {
+  margin-left: 24px;
+  margin-bottom: 12px;
+}
+
+.markdown-body li {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+  margin-top: 20px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  word-wrap: break-word;
+}
+
+.markdown-body blockquote {
+  border-left: 4px solid var(--accent-blue);
+  padding-left: 16px;
+  margin: 12px 0;
+  color: var(--text-secondary);
+}
+
+.markdown-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12px 0;
+}
+
+.markdown-body th, .markdown-body td {
+  border: 1px solid var(--separator);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown-body th {
+  background-color: var(--bg-secondary);
+}
+
+.markdown-body a {
+  color: var(--accent-blue);
+  text-decoration: none;
+}
+
+.markdown-body a:hover {
+  text-decoration: underline;
+}
+
+.markdown-body strong {
+  font-weight: 600;
+}
+
+.markdown-body em {
+  font-style: italic;
+}
+
+/* Button styles */
+button {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* Input styles */
+input, textarea, select {
+  font-family: inherit;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease;
+}
