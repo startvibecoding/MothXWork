@@ -4,6 +4,8 @@
 
 [English](./README.md) | 中文
 
+![VibeCoding GUI](docs/images/sc.png)
+
 ## 功能特性
 
 - 🤖 与 AI 编程助手对话
