@@ -3,6 +3,7 @@ export namespace vibecoding {
 	export class ApprovalConfig {
 	    bashWhitelist?: string[];
 	    bashBlacklist?: string[];
+	    confirmBeforeWrite?: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new ApprovalConfig(source);
@@ -12,6 +13,7 @@ export namespace vibecoding {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.bashWhitelist = source["bashWhitelist"];
 	        this.bashBlacklist = source["bashBlacklist"];
+	        this.confirmBeforeWrite = source["confirmBeforeWrite"];
 	    }
 	}
 	export class CompactionConfig {
@@ -153,7 +155,10 @@ export namespace vibecoding {
 	export class ProviderConfig {
 	    apiKey: string;
 	    baseUrl: string;
+	    httpProxy?: string;
 	    api: string;
+	    thinkingFormat?: string;
+	    cacheControl?: boolean;
 	    models: ModelConfig[];
 	
 	    static createFrom(source: any = {}) {
@@ -164,7 +169,10 @@ export namespace vibecoding {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.apiKey = source["apiKey"];
 	        this.baseUrl = source["baseUrl"];
+	        this.httpProxy = source["httpProxy"];
 	        this.api = source["api"];
+	        this.thinkingFormat = source["thinkingFormat"];
+	        this.cacheControl = source["cacheControl"];
 	        this.models = this.convertValues(source["models"], ModelConfig);
 	    }
 	
@@ -205,8 +213,10 @@ export namespace vibecoding {
 	export class SandboxConfig {
 	    enabled: boolean;
 	    level: string;
+	    bwrapPath?: string;
 	    allowNetwork: boolean;
 	    allowedRead?: string[];
+	    allowedWrite?: string[];
 	    deniedPaths?: string[];
 	    passEnv?: string[];
 	    tmpSize?: string;
@@ -219,8 +229,10 @@ export namespace vibecoding {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.enabled = source["enabled"];
 	        this.level = source["level"];
+	        this.bwrapPath = source["bwrapPath"];
 	        this.allowNetwork = source["allowNetwork"];
 	        this.allowedRead = source["allowedRead"];
+	        this.allowedWrite = source["allowedWrite"];
 	        this.deniedPaths = source["deniedPaths"];
 	        this.passEnv = source["passEnv"];
 	        this.tmpSize = source["tmpSize"];
@@ -246,21 +258,42 @@ export namespace vibecoding {
 	        this.thinking = source["thinking"];
 	    }
 	}
+	export class WebSearchSettings {
+	    enabled?: boolean;
+	    provider?: string;
+	    providerType?: string;
+	    model?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new WebSearchSettings(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.enabled = source["enabled"];
+	        this.provider = source["provider"];
+	        this.providerType = source["providerType"];
+	        this.model = source["model"];
+	    }
+	}
 	export class VibeCodingSettings {
 	    providers: Record<string, ProviderConfig>;
 	    defaultProvider: string;
 	    defaultModel: string;
 	    defaultThinkingLevel: string;
 	    defaultMode: string;
-	    maxOutputTokens?: number;
+	    enablePlanTool?: boolean;
+	    webSearch: WebSearchSettings;
 	    maxContextTokens?: number;
-	    compaction?: CompactionConfig;
-	    sandbox?: SandboxConfig;
+	    maxOutputTokens?: number;
 	    contextFiles?: ContextFilesConfig;
 	    skillsDir?: string;
+	    compaction?: CompactionConfig;
+	    sandbox?: SandboxConfig;
 	    sessionDir?: string;
 	    shellPath?: string;
 	    shellCommandPrefix?: string;
+	    theme?: string;
 	    retry?: RetryConfig;
 	    approval?: ApprovalConfig;
 	
@@ -275,15 +308,18 @@ export namespace vibecoding {
 	        this.defaultModel = source["defaultModel"];
 	        this.defaultThinkingLevel = source["defaultThinkingLevel"];
 	        this.defaultMode = source["defaultMode"];
-	        this.maxOutputTokens = source["maxOutputTokens"];
+	        this.enablePlanTool = source["enablePlanTool"];
+	        this.webSearch = this.convertValues(source["webSearch"], WebSearchSettings);
 	        this.maxContextTokens = source["maxContextTokens"];
-	        this.compaction = this.convertValues(source["compaction"], CompactionConfig);
-	        this.sandbox = this.convertValues(source["sandbox"], SandboxConfig);
+	        this.maxOutputTokens = source["maxOutputTokens"];
 	        this.contextFiles = this.convertValues(source["contextFiles"], ContextFilesConfig);
 	        this.skillsDir = source["skillsDir"];
+	        this.compaction = this.convertValues(source["compaction"], CompactionConfig);
+	        this.sandbox = this.convertValues(source["sandbox"], SandboxConfig);
 	        this.sessionDir = source["sessionDir"];
 	        this.shellPath = source["shellPath"];
 	        this.shellCommandPrefix = source["shellCommandPrefix"];
+	        this.theme = source["theme"];
 	        this.retry = this.convertValues(source["retry"], RetryConfig);
 	        this.approval = this.convertValues(source["approval"], ApprovalConfig);
 	    }

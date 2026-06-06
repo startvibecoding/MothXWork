@@ -14,17 +14,28 @@ type VibeCodingSettings struct {
 	DefaultModel         string                     `json:"defaultModel"`
 	DefaultThinkingLevel string                     `json:"defaultThinkingLevel"`
 	DefaultMode          string                     `json:"defaultMode"`
-	MaxOutputTokens      int                        `json:"maxOutputTokens,omitempty"`
+	EnablePlanTool       *bool                      `json:"enablePlanTool,omitempty"`
+	WebSearch            WebSearchSettings          `json:"webSearch"`
 	MaxContextTokens     int                        `json:"maxContextTokens,omitempty"`
-	Compaction           *CompactionConfig          `json:"compaction,omitempty"`
-	Sandbox              *SandboxConfig             `json:"sandbox,omitempty"`
+	MaxOutputTokens      int                        `json:"maxOutputTokens,omitempty"`
 	ContextFiles         *ContextFilesConfig        `json:"contextFiles,omitempty"`
 	SkillsDir            string                     `json:"skillsDir,omitempty"`
+	Compaction           *CompactionConfig          `json:"compaction,omitempty"`
+	Sandbox              *SandboxConfig             `json:"sandbox,omitempty"`
 	SessionDir           string                     `json:"sessionDir,omitempty"`
 	ShellPath            string                     `json:"shellPath,omitempty"`
 	ShellCommandPrefix   string                     `json:"shellCommandPrefix,omitempty"`
+	Theme                string                     `json:"theme,omitempty"`
 	Retry                *RetryConfig               `json:"retry,omitempty"`
 	Approval             *ApprovalConfig            `json:"approval,omitempty"`
+}
+
+// WebSearchSettings represents web search configuration
+type WebSearchSettings struct {
+	Enabled      *bool  `json:"enabled,omitempty"`
+	Provider     string `json:"provider,omitempty"`
+	ProviderType string `json:"providerType,omitempty"`
+	Model        string `json:"model,omitempty"`
 }
 
 // CompactionConfig represents compaction settings
@@ -38,8 +49,10 @@ type CompactionConfig struct {
 type SandboxConfig struct {
 	Enabled      bool     `json:"enabled"`
 	Level        string   `json:"level"`
+	BwrapPath    string   `json:"bwrapPath,omitempty"`
 	AllowNetwork bool     `json:"allowNetwork"`
 	AllowedRead  []string `json:"allowedRead,omitempty"`
+	AllowedWrite []string `json:"allowedWrite,omitempty"`
 	DeniedPaths  []string `json:"deniedPaths,omitempty"`
 	PassEnv      []string `json:"passEnv,omitempty"`
 	TmpSize      string   `json:"tmpSize,omitempty"`
@@ -60,16 +73,20 @@ type RetryConfig struct {
 
 // ApprovalConfig represents approval settings
 type ApprovalConfig struct {
-	BashWhitelist []string `json:"bashWhitelist,omitempty"`
-	BashBlacklist []string `json:"bashBlacklist,omitempty"`
+	BashWhitelist      []string `json:"bashWhitelist,omitempty"`
+	BashBlacklist      []string `json:"bashBlacklist,omitempty"`
+	ConfirmBeforeWrite *bool    `json:"confirmBeforeWrite,omitempty"`
 }
 
 // ProviderConfig represents a provider configuration
 type ProviderConfig struct {
-	APIKey  string        `json:"apiKey"`
-	BaseURL string        `json:"baseUrl"`
-	API     string        `json:"api"`
-	Models  []ModelConfig `json:"models"`
+	APIKey         string        `json:"apiKey"`
+	BaseURL        string        `json:"baseUrl"`
+	HTTPProxy      string        `json:"httpProxy,omitempty"`
+	API            string        `json:"api"`
+	ThinkingFormat string        `json:"thinkingFormat,omitempty"`
+	CacheControl   *bool         `json:"cacheControl,omitempty"`
+	Models         []ModelConfig `json:"models"`
 }
 
 // ModelConfig represents a model configuration
@@ -201,9 +218,10 @@ func DefaultSettings() *VibeCodingSettings {
 				},
 			},
 			"xiaomi": {
-				BaseURL: "https://api.xiaomimimo.com/v1",
-				APIKey:  "${XIAOMI_API_KEY}",
-				API:     "openai-chat",
+				BaseURL:        "https://api.xiaomimimo.com/v1",
+				APIKey:         "${XIAOMI_API_KEY}",
+				API:            "openai-chat",
+				ThinkingFormat: "xiaomi",
 				Models: []ModelConfig{
 					{ID: "mimo-v2.5-pro", Name: "MiMo-V2.5-Pro", Reasoning: true, ContextWindow: 1000000, MaxTokens: 128000, Cost: &CostConfig{Input: 0.435, Output: 0.87, CacheRead: 0.0036}, Input: []string{"text"}},
 					{ID: "mimo-v2.5", Name: "MiMo-V2.5", Reasoning: true, ContextWindow: 1000000, MaxTokens: 128000, Cost: &CostConfig{Input: 0.14, Output: 0.28, CacheRead: 0.0028}, Input: []string{"text", "image", "audio", "video"}},
@@ -215,16 +233,26 @@ func DefaultSettings() *VibeCodingSettings {
 		DefaultModel:         "deepseek-v4-flash",
 		DefaultThinkingLevel: "medium",
 		DefaultMode:          "agent",
+		EnablePlanTool:       boolPtr(true),
+		WebSearch:            WebSearchSettings{Enabled: boolPtr(false), Provider: "openai", ProviderType: "responses"},
 		MaxOutputTokens:      384000,
 		MaxContextTokens:     1000000,
 		ContextFiles:         &ContextFilesConfig{Enabled: true},
+		SkillsDir:            "~/.vibecoding/skills",
 		Compaction:           &CompactionConfig{Enabled: true, ReserveTokens: 16384, KeepRecentTokens: 20000},
 		Sandbox:              &SandboxConfig{Enabled: false, Level: "none", TmpSize: "100m"},
+		SessionDir:           "~/.vibecoding/sessions",
+		Theme:                "dark",
 		Retry:                &RetryConfig{Enabled: true, MaxRetries: 3, BaseDelayMs: 2000},
 		Approval: &ApprovalConfig{
-			BashWhitelist: []string{"go ", "make ", "git ", "npm ", "yarn ", "node ", "python ", "pip "},
+			BashWhitelist:      []string{"go ", "make ", "git ", "npm ", "yarn ", "node ", "python ", "pip "},
+			ConfirmBeforeWrite: boolPtr(true),
 		},
 	}
+}
+
+func boolPtr(v bool) *bool {
+	return &v
 }
 
 // SaveSettings saves settings to ~/.vibecoding/settings.json
