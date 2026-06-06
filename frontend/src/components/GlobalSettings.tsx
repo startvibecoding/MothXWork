@@ -87,7 +87,8 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
     maxTokens: 8192,
     temperature: undefined as number | undefined,
     top_p: undefined as number | undefined,
-    input: ['text'] as string[]
+    input: ['text'] as string[],
+    thinkingFormat: '' as string
   })
 
   useEffect(() => {
@@ -245,12 +246,13 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
       maxTokens: modelForm.maxTokens,
       temperature: modelForm.temperature,
       top_p: modelForm.top_p,
-      input: modelForm.input
+      input: modelForm.input,
+      compat: modelForm.thinkingFormat ? { thinkingFormat: modelForm.thinkingFormat } : undefined
     })
     setSettings(newSettings)
     setHasChanges(true)
     setShowAddModel(null)
-    setModelForm({ id: '', name: '', reasoning: true, contextWindow: 200000, maxTokens: 8192, temperature: undefined, top_p: undefined, input: ['text'] })
+    setModelForm({ id: '', name: '', reasoning: true, contextWindow: 200000, maxTokens: 8192, temperature: undefined, top_p: undefined, input: ['text'], thinkingFormat: '' })
   }
 
   const handleEditModel = (providerId: string, model: Model) => {
@@ -262,7 +264,8 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
       maxTokens: model.maxTokens || 0,
       temperature: model.temperature,
       top_p: model.top_p,
-      input: model.input || []
+      input: model.input || [],
+      thinkingFormat: model.compat?.thinkingFormat || ''
     })
     setEditingModel({ provider: providerId, model })
   }
@@ -274,7 +277,15 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
     const models = newSettings.providers[editingModel.provider].models
     const index = models.findIndex(m => m.id === editingModel.model?.id)
     if (index !== -1) {
-      models[index] = { ...models[index], ...modelForm }
+      const updated = { ...models[index], ...modelForm }
+      // Handle compat.thinkingFormat
+      if (modelForm.thinkingFormat) {
+        updated.compat = { ...updated.compat, thinkingFormat: modelForm.thinkingFormat }
+      } else if (updated.compat) {
+        delete updated.compat.thinkingFormat
+        if (Object.keys(updated.compat).length === 0) updated.compat = undefined
+      }
+      models[index] = updated
     }
     setSettings(newSettings)
     setHasChanges(true)
@@ -600,6 +611,15 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                               value={modelForm.top_p ?? ''}
                               onChange={e => setModelForm({ ...modelForm, top_p: e.target.value ? parseFloat(e.target.value) : undefined })}
                             />
+                            <div>
+                              <label className="text-xs text-text-secondary mb-1 block">Format:</label>
+                              <CustomSelect
+                                value={modelForm.thinkingFormat}
+                                onChange={value => setModelForm({ ...modelForm, thinkingFormat: value })}
+                                options={thinkingFormatOptions}
+                                placeholder="Auto (default)"
+                              />
+                            </div>
                           </div>
                           <div className="mt-3">
                             <label className="text-xs text-text-secondary mb-2 block">Input Types</label>
@@ -699,6 +719,15 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                                     onChange={e => setModelForm({ ...modelForm, top_p: e.target.value ? parseFloat(e.target.value) : undefined })}
                                   />
                                 </div>
+                                <div>
+                                  <label className="text-xs text-text-secondary mb-1 block">Format:</label>
+                                  <CustomSelect
+                                    value={modelForm.thinkingFormat}
+                                    onChange={value => setModelForm({ ...modelForm, thinkingFormat: value })}
+                                    options={thinkingFormatOptions}
+                                    placeholder="Auto (default)"
+                                  />
+                                </div>
                                 <div className="flex justify-end space-x-2">
                                   <button
                                     className="px-2 py-1 bg-tertiary rounded text-xs text-text-primary"
@@ -735,6 +764,9 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                                       ))}
                                       {model.temperature != null && (
                                         <span className="text-xs bg-tertiary text-text-secondary px-1 rounded">T:{model.temperature}</span>
+                                      )}
+                                      {model.compat?.thinkingFormat && (
+                                        <span className="text-xs bg-accent-purple/20 text-accent-purple px-1 rounded">{model.compat.thinkingFormat}</span>
                                       )}
                                     </div>
                                   </div>
