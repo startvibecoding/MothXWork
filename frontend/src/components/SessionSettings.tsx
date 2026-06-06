@@ -18,8 +18,12 @@ interface Provider {
 interface Model {
   id: string
   name: string
-  contextWindow: number
-  maxTokens: number
+  reasoning?: boolean
+  contextWindow?: number
+  maxTokens?: number
+  temperature?: number
+  top_p?: number
+  input?: string[]
 }
 
 interface SessionSettingsProps {
@@ -191,10 +195,12 @@ export default function SessionSettings({ config, onConfigChange }: SessionSetti
 
   const modelOptions = models.map(m => ({
     value: m.id,
-    label: `${m.name} (${m.contextWindow >= 1000000 
-      ? `${(m.contextWindow / 1000000).toFixed(0)}M` 
-      : `${(m.contextWindow / 1000).toFixed(0)}K`
-    })`
+    label: m.contextWindow 
+      ? `${m.name} (${m.contextWindow >= 1000000 
+        ? `${(m.contextWindow / 1000000).toFixed(0)}M` 
+        : `${(m.contextWindow / 1000).toFixed(0)}K`
+      })`
+      : m.name
   }))
 
   return (

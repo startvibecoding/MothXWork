@@ -3,13 +3,42 @@ import { GetSettings, SaveSettings, LoadUIConfig, SaveUIConfig } from '../../wai
 import CustomSelect from './CustomSelect'
 import AdvancedSettings from './AdvancedSettings'
 
+interface CostConfig {
+  input: number
+  output: number
+  cacheRead?: number
+  cacheWrite?: number
+}
+
+interface ModelCompat {
+  thinkingFormat?: string
+  requiresReasoningContentOnAssistant?: boolean
+  requiresReasoningContentOnAssistantMessages?: boolean
+  forceAdaptiveThinking?: boolean
+  supportsDeveloperRole?: boolean
+  supportsStore?: boolean
+  supportsReasoningEffort?: boolean
+  supportsStrictMode?: boolean
+  maxTokensField?: string
+  supportsCacheControlOnTools?: boolean
+  supportsLongCacheRetention?: boolean
+  supportsPromptCacheKey?: boolean
+  supportsReasoningSummary?: boolean
+  sendSessionAffinityHeaders?: boolean
+  supportsEagerToolInputStreaming?: boolean
+}
+
 interface Model {
   id: string
   name: string
-  contextWindow: number
-  maxTokens: number
   reasoning?: boolean
+  contextWindow?: number
+  maxTokens?: number
+  temperature?: number
+  top_p?: number
+  cost?: CostConfig
   input?: string[]
+  compat?: ModelCompat
 }
 
 interface Provider {
@@ -47,7 +76,16 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
 
   // Form states
   const [providerForm, setProviderForm] = useState({ id: '', apiKey: '', baseUrl: '', api: 'openai-chat' })
-  const [modelForm, setModelForm] = useState({ id: '', name: '', contextWindow: 1000000, maxTokens: 65535 })
+  const [modelForm, setModelForm] = useState({ 
+    id: '', 
+    name: '', 
+    reasoning: false,
+    contextWindow: 1000000, 
+    maxTokens: 65535,
+    temperature: undefined as number | undefined,
+    top_p: undefined as number | undefined,
+    input: [] as string[]
+  })
 
   useEffect(() => {
     if (isOpen) {
@@ -185,17 +223,30 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
     newSettings.providers[providerId].models.push({
       id: modelForm.id,
       name: modelForm.name,
+      reasoning: modelForm.reasoning,
       contextWindow: modelForm.contextWindow,
-      maxTokens: modelForm.maxTokens
+      maxTokens: modelForm.maxTokens,
+      temperature: modelForm.temperature,
+      top_p: modelForm.top_p,
+      input: modelForm.input
     })
     setSettings(newSettings)
     setHasChanges(true)
     setShowAddModel(null)
-    setModelForm({ id: '', name: '', contextWindow: 1000000, maxTokens: 65535 })
+    setModelForm({ id: '', name: '', reasoning: false, contextWindow: 1000000, maxTokens: 65535, temperature: undefined, top_p: undefined, input: [] })
   }
 
   const handleEditModel = (providerId: string, model: Model) => {
-    setModelForm({ id: model.id, name: model.name, contextWindow: model.contextWindow, maxTokens: model.maxTokens })
+    setModelForm({ 
+      id: model.id, 
+      name: model.name, 
+      reasoning: model.reasoning || false,
+      contextWindow: model.contextWindow || 0, 
+      maxTokens: model.maxTokens || 0,
+      temperature: model.temperature,
+      top_p: model.top_p,
+      input: model.input || []
+    })
     setEditingModel({ provider: providerId, model })
   }
 
@@ -451,6 +502,16 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                               value={modelForm.name}
                               onChange={e => setModelForm({ ...modelForm, name: e.target.value })}
                             />
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id="reasoning"
+                                checked={modelForm.reasoning}
+                                onChange={e => setModelForm({ ...modelForm, reasoning: e.target.checked })}
+                                className="rounded"
+                              />
+                              <label htmlFor="reasoning" className="text-sm text-text-secondary">Reasoning</label>
+                            </div>
                             <input
                               type="number"
                               placeholder="Context Window"
@@ -465,6 +526,42 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                               value={modelForm.maxTokens}
                               onChange={e => setModelForm({ ...modelForm, maxTokens: parseInt(e.target.value) || 0 })}
                             />
+                            <input
+                              type="number"
+                              placeholder="Temperature (optional)"
+                              className="bg-primary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm"
+                              value={modelForm.temperature ?? ''}
+                              onChange={e => setModelForm({ ...modelForm, temperature: e.target.value ? parseFloat(e.target.value) : undefined })}
+                            />
+                            <input
+                              type="number"
+                              placeholder="Top P (optional)"
+                              className="bg-primary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm"
+                              value={modelForm.top_p ?? ''}
+                              onChange={e => setModelForm({ ...modelForm, top_p: e.target.value ? parseFloat(e.target.value) : undefined })}
+                            />
+                          </div>
+                          <div className="mt-3">
+                            <label className="text-xs text-text-secondary mb-2 block">Input Types</label>
+                            <div className="flex flex-wrap gap-2">
+                              {['text', 'image', 'audio', 'video'].map(type => (
+                                <label key={type} className="flex items-center space-x-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={modelForm.input.includes(type)}
+                                    onChange={e => {
+                                      if (e.target.checked) {
+                                        setModelForm({ ...modelForm, input: [...modelForm.input, type] })
+                                      } else {
+                                        setModelForm({ ...modelForm, input: modelForm.input.filter(t => t !== type) })
+                                      }
+                                    }}
+                                    className="rounded"
+                                  />
+                                  <span className="text-xs text-text-primary">{type}</span>
+                                </label>
+                              ))}
+                            </div>
                           </div>
                           <div className="flex justify-end space-x-2 mt-3">
                             <button
@@ -503,6 +600,45 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                                   value={modelForm.name}
                                   onChange={e => setModelForm({ ...modelForm, name: e.target.value })}
                                 />
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={modelForm.reasoning}
+                                    onChange={e => setModelForm({ ...modelForm, reasoning: e.target.checked })}
+                                    className="rounded"
+                                  />
+                                  <span className="text-xs text-text-secondary">Reasoning</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <input
+                                    type="number"
+                                    placeholder="Context Window"
+                                    className="w-full bg-primary text-text-primary rounded px-2 py-1 border border-separator focus:border-accent outline-none text-sm"
+                                    value={modelForm.contextWindow}
+                                    onChange={e => setModelForm({ ...modelForm, contextWindow: parseInt(e.target.value) || 0 })}
+                                  />
+                                  <input
+                                    type="number"
+                                    placeholder="Max Tokens"
+                                    className="w-full bg-primary text-text-primary rounded px-2 py-1 border border-separator focus:border-accent outline-none text-sm"
+                                    value={modelForm.maxTokens}
+                                    onChange={e => setModelForm({ ...modelForm, maxTokens: parseInt(e.target.value) || 0 })}
+                                  />
+                                  <input
+                                    type="number"
+                                    placeholder="Temperature"
+                                    className="w-full bg-primary text-text-primary rounded px-2 py-1 border border-separator focus:border-accent outline-none text-sm"
+                                    value={modelForm.temperature ?? ''}
+                                    onChange={e => setModelForm({ ...modelForm, temperature: e.target.value ? parseFloat(e.target.value) : undefined })}
+                                  />
+                                  <input
+                                    type="number"
+                                    placeholder="Top P"
+                                    className="w-full bg-primary text-text-primary rounded px-2 py-1 border border-separator focus:border-accent outline-none text-sm"
+                                    value={modelForm.top_p ?? ''}
+                                    onChange={e => setModelForm({ ...modelForm, top_p: e.target.value ? parseFloat(e.target.value) : undefined })}
+                                  />
+                                </div>
                                 <div className="flex justify-end space-x-2">
                                   <button
                                     className="px-2 py-1 bg-tertiary rounded text-xs text-text-primary"
@@ -524,10 +660,22 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                                   <div>
                                     <div className="font-medium text-text-primary text-sm">{model.name}</div>
                                     <div className="text-xs text-text-secondary mt-1">
-                                      {model.contextWindow >= 1000000 
-                                        ? `${(model.contextWindow / 1000000).toFixed(0)}M tokens`
-                                        : `${(model.contextWindow / 1000).toFixed(0)}K tokens`
-                                      }
+                                      {model.contextWindow ? (
+                                        model.contextWindow >= 1000000 
+                                          ? `${(model.contextWindow / 1000000).toFixed(0)}M tokens`
+                                          : `${(model.contextWindow / 1000).toFixed(0)}K tokens`
+                                      ) : 'N/A'}
+                                    </div>
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {model.reasoning && (
+                                        <span className="text-xs bg-accent-green/20 text-accent-green px-1 rounded">Reasoning</span>
+                                      )}
+                                      {model.input?.map(type => (
+                                        <span key={type} className="text-xs bg-accent/20 text-accent px-1 rounded">{type}</span>
+                                      ))}
+                                      {model.temperature != null && (
+                                        <span className="text-xs bg-tertiary text-text-secondary px-1 rounded">T:{model.temperature}</span>
+                                      )}
                                     </div>
                                   </div>
                                   <div className="flex space-x-1">

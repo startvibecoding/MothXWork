@@ -74,10 +74,43 @@ type ProviderConfig struct {
 
 // ModelConfig represents a model configuration
 type ModelConfig struct {
-	ID            string `json:"id"`
-	Name          string `json:"name"`
-	ContextWindow int    `json:"contextWindow"`
-	MaxTokens     int    `json:"maxTokens"`
+	ID            string       `json:"id"`
+	Name          string       `json:"name"`
+	Reasoning     bool         `json:"reasoning,omitempty"`
+	ContextWindow int          `json:"contextWindow,omitempty"`
+	MaxTokens     int          `json:"maxTokens,omitempty"`
+	Temperature   *float64     `json:"temperature,omitempty"`
+	TopP          *float64     `json:"top_p,omitempty"`
+	Cost          *CostConfig  `json:"cost,omitempty"`
+	Input         []string     `json:"input,omitempty"`
+	Compat        *ModelCompat `json:"compat,omitempty"`
+}
+
+// CostConfig represents model cost configuration
+type CostConfig struct {
+	Input      float64 `json:"input"`
+	Output     float64 `json:"output"`
+	CacheRead  float64 `json:"cacheRead,omitempty"`
+	CacheWrite float64 `json:"cacheWrite,omitempty"`
+}
+
+// ModelCompat defines per-model compatibility flags
+type ModelCompat struct {
+	ThinkingFormat                              string `json:"thinkingFormat,omitempty"`
+	RequiresReasoningContentOnAssistant         bool   `json:"requiresReasoningContentOnAssistant,omitempty"`
+	RequiresReasoningContentOnAssistantMessages bool   `json:"requiresReasoningContentOnAssistantMessages,omitempty"`
+	ForceAdaptiveThinking                       bool   `json:"forceAdaptiveThinking,omitempty"`
+	SupportsDeveloperRole                       *bool  `json:"supportsDeveloperRole,omitempty"`
+	SupportsStore                               *bool  `json:"supportsStore,omitempty"`
+	SupportsReasoningEffort                     *bool  `json:"supportsReasoningEffort,omitempty"`
+	SupportsStrictMode                          *bool  `json:"supportsStrictMode,omitempty"`
+	MaxTokensField                              string `json:"maxTokensField,omitempty"`
+	SupportsCacheControlOnTools                 *bool  `json:"supportsCacheControlOnTools,omitempty"`
+	SupportsLongCacheRetention                  *bool  `json:"supportsLongCacheRetention,omitempty"`
+	SupportsPromptCacheKey                      *bool  `json:"supportsPromptCacheKey,omitempty"`
+	SupportsReasoningSummary                    *bool  `json:"supportsReasoningSummary,omitempty"`
+	SendSessionAffinityHeaders                  bool   `json:"sendSessionAffinityHeaders,omitempty"`
+	SupportsEagerToolInputStreaming             *bool  `json:"supportsEagerToolInputStreaming,omitempty"`
 }
 
 // LoadVibeCodingSettings loads settings from ~/.vibecoding/settings.json
@@ -153,12 +186,29 @@ func (s *VibeCodingSettings) GetModels(providerID string) []map[string]interface
 	
 	models := make([]map[string]interface{}, 0, len(p.Models))
 	for _, m := range p.Models {
-		models = append(models, map[string]interface{}{
+		model := map[string]interface{}{
 			"id":            m.ID,
 			"name":          m.Name,
+			"reasoning":     m.Reasoning,
 			"contextWindow": m.ContextWindow,
 			"maxTokens":     m.MaxTokens,
-		})
+		}
+		if m.Temperature != nil {
+			model["temperature"] = *m.Temperature
+		}
+		if m.TopP != nil {
+			model["top_p"] = *m.TopP
+		}
+		if m.Cost != nil {
+			model["cost"] = m.Cost
+		}
+		if len(m.Input) > 0 {
+			model["input"] = m.Input
+		}
+		if m.Compat != nil {
+			model["compat"] = m.Compat
+		}
+		models = append(models, model)
 	}
 	return models
 }
