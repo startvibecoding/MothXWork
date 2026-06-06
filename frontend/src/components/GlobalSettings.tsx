@@ -281,7 +281,10 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
 
   const apiOptions = [
     { value: 'openai-chat', label: 'OpenAI Chat' },
-    { value: 'anthropic-messages', label: 'Anthropic Messages' }
+    { value: 'openai-responses', label: 'OpenAI Responses' },
+    { value: 'anthropic-messages', label: 'Anthropic Messages' },
+    { value: 'google-gemini', label: 'Google Gemini' },
+    { value: 'google-vertex', label: 'Google Vertex' }
   ]
 
   const modeOptions = [
