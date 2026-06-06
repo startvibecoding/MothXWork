@@ -79,7 +79,7 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
   const [modelForm, setModelForm] = useState({ 
     id: '', 
     name: '', 
-    reasoning: false,
+    reasoning: true,
     contextWindow: 200000, 
     maxTokens: 8192,
     temperature: undefined as number | undefined,
@@ -233,7 +233,7 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
     setSettings(newSettings)
     setHasChanges(true)
     setShowAddModel(null)
-    setModelForm({ id: '', name: '', reasoning: false, contextWindow: 200000, maxTokens: 8192, temperature: undefined, top_p: undefined, input: ['text'] })
+    setModelForm({ id: '', name: '', reasoning: true, contextWindow: 200000, maxTokens: 8192, temperature: undefined, top_p: undefined, input: ['text'] })
   }
 
   const handleEditModel = (providerId: string, model: Model) => {
