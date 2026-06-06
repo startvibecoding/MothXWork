@@ -522,8 +522,14 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                     )}
 
                     {/* Provider Info */}
-                    <div className="text-sm text-text-secondary mb-3">
-                      <span className="text-text-tertiary">Base URL:</span> {provider.baseUrl}
+                    <div className="text-sm text-text-secondary mb-3 space-y-1">
+                      <div><span className="text-text-tertiary">Base URL:</span> {provider.baseUrl}</div>
+                      {provider.thinkingFormat && (
+                        <div><span className="text-text-tertiary">Thinking Format:</span> {provider.thinkingFormat}</div>
+                      )}
+                      {provider.httpProxy && (
+                        <div><span className="text-text-tertiary">HTTP Proxy:</span> {provider.httpProxy}</div>
+                      )}
                     </div>
 
                     {/* Models */}
