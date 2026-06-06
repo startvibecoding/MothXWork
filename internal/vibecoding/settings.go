@@ -125,12 +125,7 @@ func LoadVibeCodingSettings() (*VibeCodingSettings, error) {
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Return default settings if file doesn't exist
-			return &VibeCodingSettings{
-				DefaultProvider:      "deepseek-openai",
-				DefaultModel:         "deepseek-v4-flash",
-				DefaultThinkingLevel: "medium",
-				DefaultMode:          "agent",
-			}, nil
+			return DefaultSettings(), nil
 		}
 		return nil, fmt.Errorf("read settings: %w", err)
 	}
@@ -141,6 +136,95 @@ func LoadVibeCodingSettings() (*VibeCodingSettings, error) {
 	}
 	
 	return &settings, nil
+}
+
+// DefaultSettings returns the default settings matching vibecoding's defaults
+func DefaultSettings() *VibeCodingSettings {
+	return &VibeCodingSettings{
+		Providers: map[string]*ProviderConfig{
+			"anthropic": {
+				BaseURL: "https://api.anthropic.com",
+				APIKey:  "${ANTHROPIC_API_KEY}",
+				API:     "anthropic-messages",
+				Models: []ModelConfig{
+					{ID: "claude-sonnet-4-20250514", Name: "Claude 4 Sonnet", Reasoning: true, ContextWindow: 200000, MaxTokens: 16384, Cost: &CostConfig{Input: 3.0, Output: 15.0, CacheRead: 0.3, CacheWrite: 3.75}, Input: []string{"text", "image"}},
+					{ID: "claude-3-5-sonnet-20241022", Name: "Claude 3.5 Sonnet", ContextWindow: 200000, MaxTokens: 8192, Cost: &CostConfig{Input: 3.0, Output: 15.0, CacheRead: 0.3, CacheWrite: 3.75}, Input: []string{"text", "image"}},
+					{ID: "claude-3-5-haiku-20241022", Name: "Claude 3.5 Haiku", ContextWindow: 200000, MaxTokens: 8192, Cost: &CostConfig{Input: 0.8, Output: 4.0, CacheRead: 0.08, CacheWrite: 1.0}, Input: []string{"text", "image"}},
+					{ID: "claude-3-opus-20240229", Name: "Claude 3 Opus", ContextWindow: 200000, MaxTokens: 4096, Cost: &CostConfig{Input: 15.0, Output: 75.0, CacheRead: 1.5, CacheWrite: 18.75}, Input: []string{"text", "image"}},
+				},
+			},
+			"deepseek-anthropic": {
+				BaseURL: "https://api.deepseek.com/anthropic",
+				APIKey:  "${DEEPSEEK_API_KEY}",
+				API:     "anthropic-messages",
+				Models: []ModelConfig{
+					{ID: "deepseek-v4-flash", Name: "DeepSeek-V4-Flash", ContextWindow: 1000000, MaxTokens: 384000, Cost: &CostConfig{Input: 0.5, Output: 2}, Input: []string{"text"}},
+					{ID: "deepseek-v4-pro", Name: "DeepSeek-V4-Pro", Reasoning: true, ContextWindow: 1000000, MaxTokens: 384000, Cost: &CostConfig{Input: 1, Output: 4}, Input: []string{"text"}},
+				},
+			},
+			"deepseek-openai": {
+				BaseURL: "https://api.deepseek.com",
+				APIKey:  "${DEEPSEEK_API_KEY}",
+				API:     "openai-chat",
+				Models: []ModelConfig{
+					{ID: "deepseek-v4-flash", Name: "DeepSeek-V4-Flash", ContextWindow: 1000000, MaxTokens: 384000, Cost: &CostConfig{Input: 0.5, Output: 2}, Input: []string{"text"}},
+					{ID: "deepseek-v4-pro", Name: "DeepSeek-V4-Pro", Reasoning: true, ContextWindow: 1000000, MaxTokens: 384000, Cost: &CostConfig{Input: 1, Output: 4}, Input: []string{"text"}},
+				},
+			},
+			"openai": {
+				BaseURL: "https://api.openai.com/v1",
+				APIKey:  "${OPENAI_API_KEY}",
+				API:     "openai-responses",
+				Models: []ModelConfig{
+					{ID: "gpt-4o", Name: "GPT-4o", ContextWindow: 128000, MaxTokens: 16384, Cost: &CostConfig{Input: 2.5, Output: 10.0, CacheRead: 1.25, CacheWrite: 2.5}, Input: []string{"text", "image"}},
+					{ID: "gpt-4o-mini", Name: "GPT-4o Mini", ContextWindow: 128000, MaxTokens: 16384, Cost: &CostConfig{Input: 0.15, Output: 0.6, CacheRead: 0.075, CacheWrite: 0.15}, Input: []string{"text", "image"}},
+					{ID: "o1", Name: "o1", Reasoning: true, ContextWindow: 200000, MaxTokens: 100000, Cost: &CostConfig{Input: 15.0, Output: 60.0, CacheRead: 7.5, CacheWrite: 15.0}, Input: []string{"text", "image"}},
+					{ID: "o3-mini", Name: "o3-mini", Reasoning: true, ContextWindow: 200000, MaxTokens: 100000, Cost: &CostConfig{Input: 1.1, Output: 4.4, CacheRead: 0.55, CacheWrite: 1.1}, Input: []string{"text", "image"}},
+				},
+			},
+			"google-gemini": {
+				BaseURL: "https://generativelanguage.googleapis.com/v1beta/models",
+				APIKey:  "${GOOGLE_API_KEY}",
+				API:     "google-gemini",
+				Models: []ModelConfig{
+					{ID: "gemini-2.5-pro", Name: "Gemini 2.5 Pro", Reasoning: true, ContextWindow: 1000000, MaxTokens: 65536, Input: []string{"text", "image"}},
+					{ID: "gemini-2.5-flash", Name: "Gemini 2.5 Flash", Reasoning: true, ContextWindow: 1000000, MaxTokens: 65536, Input: []string{"text", "image"}},
+				},
+			},
+			"google-vertex": {
+				BaseURL: "https://aiplatform.googleapis.com/v1/projects/YOUR_PROJECT/locations/global/publishers/google/models",
+				APIKey:  "${GOOGLE_VERTEX_ACCESS_TOKEN}",
+				API:     "google-vertex",
+				Models: []ModelConfig{
+					{ID: "gemini-2.5-pro", Name: "Gemini 2.5 Pro", Reasoning: true, ContextWindow: 1000000, MaxTokens: 65536, Input: []string{"text", "image"}},
+					{ID: "gemini-2.5-flash", Name: "Gemini 2.5 Flash", Reasoning: true, ContextWindow: 1000000, MaxTokens: 65536, Input: []string{"text", "image"}},
+				},
+			},
+			"xiaomi": {
+				BaseURL: "https://api.xiaomimimo.com/v1",
+				APIKey:  "${XIAOMI_API_KEY}",
+				API:     "openai-chat",
+				Models: []ModelConfig{
+					{ID: "mimo-v2.5-pro", Name: "MiMo-V2.5-Pro", Reasoning: true, ContextWindow: 1000000, MaxTokens: 128000, Cost: &CostConfig{Input: 0.435, Output: 0.87, CacheRead: 0.0036}, Input: []string{"text"}},
+					{ID: "mimo-v2.5", Name: "MiMo-V2.5", Reasoning: true, ContextWindow: 1000000, MaxTokens: 128000, Cost: &CostConfig{Input: 0.14, Output: 0.28, CacheRead: 0.0028}, Input: []string{"text", "image", "audio", "video"}},
+					{ID: "mimo-v2-flash", Name: "MiMo-V2-Flash", Reasoning: true, ContextWindow: 256000, MaxTokens: 64000, Cost: &CostConfig{Input: 0.10, Output: 0.30, CacheRead: 0.01}, Input: []string{"text"}},
+				},
+			},
+		},
+		DefaultProvider:      "deepseek-openai",
+		DefaultModel:         "deepseek-v4-flash",
+		DefaultThinkingLevel: "medium",
+		DefaultMode:          "agent",
+		MaxOutputTokens:      384000,
+		MaxContextTokens:     1000000,
+		ContextFiles:         &ContextFilesConfig{Enabled: true},
+		Compaction:           &CompactionConfig{Enabled: true, ReserveTokens: 16384, KeepRecentTokens: 20000},
+		Sandbox:              &SandboxConfig{Enabled: false, Level: "none", TmpSize: "100m"},
+		Retry:                &RetryConfig{Enabled: true, MaxRetries: 3, BaseDelayMs: 2000},
+		Approval: &ApprovalConfig{
+			BashWhitelist: []string{"go ", "make ", "git ", "npm ", "yarn ", "node ", "python ", "pip "},
+		},
+	}
 }
 
 // SaveSettings saves settings to ~/.vibecoding/settings.json

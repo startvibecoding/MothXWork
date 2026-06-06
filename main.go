@@ -19,12 +19,7 @@ func main() {
 	if err != nil {
 		log.Printf("Warning: failed to load settings: %v", err)
 		// Use default settings
-		settings = &vibecoding.VibeCodingSettings{
-			DefaultProvider:      "deepseek-openai",
-			DefaultModel:         "deepseek-v4-flash",
-			DefaultThinkingLevel: "medium",
-			DefaultMode:          "agent",
-		}
+		settings = vibecoding.DefaultSettings()
 	}
 	
 	// Create config from settings

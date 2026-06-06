@@ -80,11 +80,11 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
     id: '', 
     name: '', 
     reasoning: false,
-    contextWindow: 1000000, 
-    maxTokens: 65535,
+    contextWindow: 200000, 
+    maxTokens: 8192,
     temperature: undefined as number | undefined,
     top_p: undefined as number | undefined,
-    input: [] as string[]
+    input: ['text'] as string[]
   })
 
   useEffect(() => {
@@ -233,7 +233,7 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
     setSettings(newSettings)
     setHasChanges(true)
     setShowAddModel(null)
-    setModelForm({ id: '', name: '', reasoning: false, contextWindow: 1000000, maxTokens: 65535, temperature: undefined, top_p: undefined, input: [] })
+    setModelForm({ id: '', name: '', reasoning: false, contextWindow: 200000, maxTokens: 8192, temperature: undefined, top_p: undefined, input: ['text'] })
   }
 
   const handleEditModel = (providerId: string, model: Model) => {
