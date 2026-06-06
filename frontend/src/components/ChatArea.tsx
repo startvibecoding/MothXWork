@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import remarkGfm from 'remark-gfm'
 import type { Components } from 'react-markdown'
 
@@ -18,19 +18,27 @@ interface ChatAreaProps {
   isLoading: boolean
 }
 
+// Get current theme from document
+const getCurrentTheme = () => {
+  return document.documentElement.getAttribute('data-theme') || 'dark'
+}
+
 const components: Components = {
   code({ node, className, children, ...props }) {
     const match = /language-(\w+)/.exec(className || '')
     const isInline = !match
     
     if (!isInline && match) {
+      const theme = getCurrentTheme()
+      const codeStyle = theme === 'light' ? vs : vscDarkPlus
+      
       return (
         <div className="my-3 rounded-lg overflow-hidden border border-separator">
           <div className="bg-secondary px-4 py-2 text-xs text-text-secondary border-b border-separator">
             {match[1]}
           </div>
           <SyntaxHighlighter
-            style={vscDarkPlus as any}
+            style={codeStyle as any}
             language={match[1]}
             PreTag="div"
             wrapLongLines={true}

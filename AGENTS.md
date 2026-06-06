@@ -73,11 +73,21 @@ GUI 只管理 session 的元数据（别名、工作目录），聊天记录由 
 - **删除**: 从列表移除 → 保存到 config
 - **切换**: 设置当前 session 和工作目录
 
+## 构建与打包
+
+构建时会自动将 vibecoding 二进制文件打包到输出目录。`make build` 会：
+1. 编译 GUI
+2. 根据当前平台复制对应的 vibecoding 二进制文件到 `build/bin/`
+
+vibecoding 二进制文件源目录: `/home/free/src/startvibecoding/vibecoding/bin/`
+可通过环境变量 `VIBECODING_BIN_DIR` 覆盖。
+
 ## 开发命令
 
 ```bash
 wails dev          # 开发模式
 wails build        # 构建
+make build         # 构建并打包 vibecoding 二进制
 ./build/bin/vibecoding-gui  # 运行
 ```
 

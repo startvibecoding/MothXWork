@@ -405,7 +405,7 @@ function App() {
                   <input
                     ref={headerInputRef}
                     type="text"
-                    className="bg-transparent text-lg font-semibold text-text-primary border-b border-white/50 outline-none w-full max-w-md"
+                    className="bg-transparent text-lg font-semibold text-text-primary border-b border-separator outline-none w-full max-w-md"
                     value={headerEditValue}
                     onChange={e => setHeaderEditValue(e.target.value)}
                     onBlur={saveHeaderRename}

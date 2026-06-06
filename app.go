@@ -7,9 +7,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	vibecoding "github.com/startvibecoding/prader/vibecoding-gui/internal/vibecoding"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
+	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -105,7 +106,7 @@ func (a *App) UpdateConfig(config *vibecoding.SessionConfig) error {
 	a.agent = agent
 	
 	// Notify frontend
-	runtime.EventsEmit(a.ctx, "config:updated", config)
+	wailsruntime.EventsEmit(a.ctx, "config:updated", config)
 	
 	return nil
 }
@@ -131,7 +132,7 @@ func (a *App) SendMessage(sessionID, message string) error {
 	// Process events in background
 	go func() {
 		for event := range events {
-			runtime.EventsEmit(a.ctx, "chat:event", event)
+			wailsruntime.EventsEmit(a.ctx, "chat:event", event)
 		}
 	}()
 	
@@ -150,7 +151,7 @@ func (a *App) SendPermissionResponse(requestID string, optionID string) error {
 
 // ShowNotification shows a notification
 func (a *App) ShowNotification(title, message string) {
-	runtime.EventsEmit(a.ctx, "notification", map[string]string{
+	wailsruntime.EventsEmit(a.ctx, "notification", map[string]string{
 		"title":   title,
 		"message": message,
 	})
@@ -158,9 +159,9 @@ func (a *App) ShowNotification(title, message string) {
 
 // OpenFileDialog opens a file dialog
 func (a *App) OpenFileDialog() (string, error) {
-	return runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+	return wailsruntime.OpenFileDialog(a.ctx, wailsruntime.OpenDialogOptions{
 		Title: "Select File",
-		Filters: []runtime.FileFilter{
+		Filters: []wailsruntime.FileFilter{
 			{
 				DisplayName: "All Files",
 				Pattern:     "*.*",
@@ -171,7 +172,7 @@ func (a *App) OpenFileDialog() (string, error) {
 
 // OpenDirectoryDialog opens a directory dialog
 func (a *App) OpenDirectoryDialog() (string, error) {
-	return runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
+	return wailsruntime.OpenDirectoryDialog(a.ctx, wailsruntime.OpenDialogOptions{
 		Title: "Select Directory",
 	})
 }
@@ -268,6 +269,20 @@ func (a *App) SaveUIConfig(config map[string]interface{}) error {
 
 // findVibeCodingBinary finds the VibeCoding binary
 func findVibeCodingBinary() string {
+	// First, check next to the executable (bundled binary)
+	exePath, err := os.Executable()
+	if err == nil {
+		exeDir := filepath.Dir(exePath)
+		// Check for vibecoding next to the executable
+		bundledPath := filepath.Join(exeDir, "vibecoding")
+		if runtime.GOOS == "windows" {
+			bundledPath += ".exe"
+		}
+		if _, err := os.Stat(bundledPath); err == nil {
+			return bundledPath
+		}
+	}
+	
 	// Check common locations
 	locations := []string{
 		"vibecoding",
