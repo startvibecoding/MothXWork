@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copy the platform-specific vibecoding binary to the build output directory
-# Usage: ./scripts/copy-vibecoding.sh [output_dir]
+# Usage: ./scripts/copy-vibecoding.sh [output_dir] [os] [arch]
 
 set -e
 
@@ -8,8 +8,9 @@ VIBECODING_BIN_DIR="${VIBECODING_BIN_DIR:-/home/free/src/startvibecoding/vibecod
 OUTPUT_DIR="${1:-build/bin}"
 
 # Detect platform and architecture
-OS=$(go env GOOS)
-ARCH=$(go env GOARCH)
+# Allow override via parameters for cross-compilation
+OS="${2:-$(go env GOOS)}"
+ARCH="${3:-$(go env GOARCH)}"
 
 # Map to vibecoding binary name
 BINARY_NAME="vibecoding-${OS}-${ARCH}"

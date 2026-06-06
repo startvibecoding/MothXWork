@@ -1,4 +1,4 @@
-.PHONY: dev build clean setup run all help build-all
+.PHONY: dev build clean setup run all help build-all build-windows build-mac deb
 
 # Configuration
 VIBECODING_BIN_DIR ?= /home/free/src/startvibecoding/vibecoding/bin
@@ -9,6 +9,14 @@ FRONTEND_DIR       := frontend
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT  := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 LDFLAGS := -ldflags "-X main.version=$(VERSION) -X main.commit=$(COMMIT)"
+
+# Deb version (must start with digit for dpkg-deb)
+GIT_TAG := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "")
+ifeq ($(GIT_TAG),)
+  DEB_VERSION := 0.0.1-$(COMMIT)
+else
+  DEB_VERSION := $(GIT_TAG:v=%)
+endif
 
 # Default target
 all: setup build run
@@ -29,6 +37,45 @@ build: setup
 	wails build $(LDFLAGS)
 	./scripts/copy-vibecoding.sh $(BUILD_DIR)
 	@echo "✅ Build complete: $(BUILD_DIR)/vibecoding-gui"
+
+## build-windows: Build for Windows (amd64)
+build-windows: setup
+	@echo "Building for Windows/amd64..."
+	GOOS=windows GOARCH=amd64 wails build $(LDFLAGS) -o vibecoding-gui.exe -platform windows/amd64
+	./scripts/copy-vibecoding.sh $(BUILD_DIR) windows amd64
+	@echo "✅ Windows build complete: $(BUILD_DIR)/vibecoding-gui.exe"
+
+## build-mac: Build for macOS (amd64 + arm64)
+build-mac: setup
+	@echo "Building for macOS/amd64..."
+	GOOS=darwin GOARCH=amd64 wails build $(LDFLAGS) -o vibecoding-gui-darwin-amd64 -platform darwin/amd64
+	./scripts/copy-vibecoding.sh $(BUILD_DIR) darwin amd64
+	@echo "Building for macOS/arm64..."
+	GOOS=darwin GOARCH=arm64 wails build $(LDFLAGS) -o vibecoding-gui-darwin-arm64 -platform darwin/arm64
+	./scripts/copy-vibecoding.sh $(BUILD_DIR) darwin arm64
+	@echo "✅ macOS builds complete"
+
+## deb: Build .deb package for Debian/Ubuntu (amd64)
+deb: setup
+	@echo "Building .deb package..."
+	GOOS=linux GOARCH=amd64 wails build $(LDFLAGS) -o vibecoding-gui -platform linux/amd64
+	./scripts/copy-vibecoding.sh $(BUILD_DIR) linux amd64
+	@# Create deb structure
+	@mkdir -p build/deb/usr/bin build/deb/DEBIAN
+	@cp $(BUILD_DIR)/vibecoding-gui build/deb/usr/bin/
+	@cp $(BUILD_DIR)/vibecoding build/deb/usr/bin/ 2>/dev/null || true
+	@chmod 755 build/deb/usr/bin/*
+	@# Create control file
+	@echo "Package: vibecoding-gui" > build/deb/DEBIAN/control
+	@echo "Version: $(DEB_VERSION)" >> build/deb/DEBIAN/control
+	@echo "Section: utils" >> build/deb/DEBIAN/control
+	@echo "Priority: optional" >> build/deb/DEBIAN/control
+	@echo "Architecture: amd64" >> build/deb/DEBIAN/control
+	@echo "Maintainer: VibeCoding Team" >> build/deb/DEBIAN/control
+	@echo "Description: VibeCoding GUI Client" >> build/deb/DEBIAN/control
+	@# Build deb
+	@dpkg-deb --build build/deb vibecoding-gui-$(DEB_VERSION)-amd64.deb
+	@echo "✅ .deb package complete: vibecoding-gui-$(DEB_VERSION)-amd64.deb"
 
 ## build-all: Build for all platforms (linux/darwin/windows, amd64/arm64)
 build-all: setup
