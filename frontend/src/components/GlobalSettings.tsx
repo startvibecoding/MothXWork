@@ -44,7 +44,10 @@ interface Model {
 interface Provider {
   apiKey: string
   baseUrl: string
+  httpProxy?: string
   api: string
+  thinkingFormat?: string
+  cacheControl?: boolean
   models: Model[]
 }
 
@@ -75,7 +78,7 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
   const [uiTheme, setUiTheme] = useState<string>('dark')
 
   // Form states
-  const [providerForm, setProviderForm] = useState({ id: '', apiKey: '', baseUrl: '', api: 'openai-chat' })
+  const [providerForm, setProviderForm] = useState({ id: '', apiKey: '', baseUrl: '', httpProxy: '', api: 'openai-chat', thinkingFormat: '', cacheControl: false })
   const [modelForm, setModelForm] = useState({ 
     id: '', 
     name: '', 
@@ -170,19 +173,30 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
     newSettings.providers[providerForm.id] = {
       apiKey: providerForm.apiKey,
       baseUrl: providerForm.baseUrl,
+      httpProxy: providerForm.httpProxy || undefined,
       api: providerForm.api,
+      thinkingFormat: providerForm.thinkingFormat || undefined,
+      cacheControl: providerForm.cacheControl || undefined,
       models: []
     }
     setSettings(newSettings)
     setHasChanges(true)
     setShowAddProvider(false)
-    setProviderForm({ id: '', apiKey: '', baseUrl: '', api: 'openai-chat' })
+    setProviderForm({ id: '', apiKey: '', baseUrl: '', httpProxy: '', api: 'openai-chat', thinkingFormat: '', cacheControl: false })
   }
 
   const handleEditProvider = (id: string) => {
     if (!settings) return
     const provider = settings.providers[id]
-    setProviderForm({ id, apiKey: provider.apiKey, baseUrl: provider.baseUrl, api: provider.api })
+    setProviderForm({ 
+      id, 
+      apiKey: provider.apiKey, 
+      baseUrl: provider.baseUrl, 
+      httpProxy: provider.httpProxy || '',
+      api: provider.api,
+      thinkingFormat: provider.thinkingFormat || '',
+      cacheControl: provider.cacheControl || false
+    })
     setEditingProvider(id)
   }
 
@@ -195,7 +209,10 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
       ...oldProvider,
       apiKey: providerForm.apiKey,
       baseUrl: providerForm.baseUrl,
-      api: providerForm.api
+      httpProxy: providerForm.httpProxy || undefined,
+      api: providerForm.api,
+      thinkingFormat: providerForm.thinkingFormat || undefined,
+      cacheControl: providerForm.cacheControl || undefined
     }
     setSettings(newSettings)
     setHasChanges(true)
@@ -285,6 +302,14 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
     { value: 'anthropic-messages', label: 'Anthropic Messages' },
     { value: 'google-gemini', label: 'Google Gemini' },
     { value: 'google-vertex', label: 'Google Vertex' }
+  ]
+
+  const thinkingFormatOptions = [
+    { value: '', label: 'Auto (default)' },
+    { value: 'openai', label: 'OpenAI' },
+    { value: 'anthropic', label: 'Anthropic' },
+    { value: 'deepseek', label: 'DeepSeek' },
+    { value: 'xiaomi', label: 'Xiaomi' }
   ]
 
   const modeOptions = [
@@ -390,6 +415,19 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                       value={providerForm.baseUrl}
                       onChange={e => setProviderForm({ ...providerForm, baseUrl: e.target.value })}
                     />
+                    <input
+                      type="text"
+                      placeholder="HTTP Proxy (optional)"
+                      className="bg-secondary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm"
+                      value={providerForm.httpProxy}
+                      onChange={e => setProviderForm({ ...providerForm, httpProxy: e.target.value })}
+                    />
+                    <CustomSelect
+                      value={providerForm.thinkingFormat}
+                      onChange={value => setProviderForm({ ...providerForm, thinkingFormat: value })}
+                      options={thinkingFormatOptions}
+                      placeholder="Thinking Format (optional)"
+                    />
                   </div>
                   <div className="flex justify-end space-x-2 mt-3">
                     <button
@@ -451,6 +489,19 @@ export default function GlobalSettings({ isOpen, onClose }: GlobalSettingsProps)
                             className="bg-primary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm"
                             value={providerForm.baseUrl}
                             onChange={e => setProviderForm({ ...providerForm, baseUrl: e.target.value })}
+                          />
+                          <input
+                            type="text"
+                            placeholder="HTTP Proxy (optional)"
+                            className="bg-primary text-text-primary rounded-lg px-3 py-2 border border-separator focus:border-accent outline-none text-sm"
+                            value={providerForm.httpProxy}
+                            onChange={e => setProviderForm({ ...providerForm, httpProxy: e.target.value })}
+                          />
+                          <CustomSelect
+                            value={providerForm.thinkingFormat}
+                            onChange={value => setProviderForm({ ...providerForm, thinkingFormat: value })}
+                            options={thinkingFormatOptions}
+                            placeholder="Thinking Format"
                           />
                         </div>
                         <div className="flex justify-end space-x-2 mt-3">
