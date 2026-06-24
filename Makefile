@@ -116,3 +116,37 @@ fmt:
 ## check: Run all checks (lint + build)
 check: lint build
 	@echo "✅ All checks passed"
+
+# ---------------------------------------------------------------------------
+# Flutter targets
+# ---------------------------------------------------------------------------
+
+FLUTTER_APP := flutter_app
+FLUTTER_BUNDLE := $(FLUTTER_APP)/build/linux/x64/release/bundle
+
+## flutter-dev: Run Flutter app in development mode
+flutter-dev:
+	cd $(FLUTTER_APP) && flutter run -d linux
+
+## flutter-build: Build Flutter app for Linux (release)
+flutter-build:
+	cd $(FLUTTER_APP) && flutter build linux --release
+	mkdir -p build/bin
+	cp -r $(FLUTTER_BUNDLE)/* build/bin/
+	@echo "✅ Flutter build: build/bin/vibecoding-gui"
+
+## flutter-deb: Build .deb from Flutter build
+flutter-deb: flutter-build
+	@echo "Building .deb package (Flutter)..."
+	mkdir -p build/deb/usr/share/vibecoding-gui build/deb/usr/bin build/deb/DEBIAN
+	cp -r $(FLUTTER_BUNDLE)/* build/deb/usr/share/vibecoding-gui/
+	ln -sf /usr/share/vibecoding-gui/vibecoding-gui build/deb/usr/bin/vibecoding-gui
+	@echo "Package: vibecoding-gui" > build/deb/DEBIAN/control
+	@echo "Version: $(DEB_VERSION)" >> build/deb/DEBIAN/control
+	@echo "Section: utils" >> build/deb/DEBIAN/control
+	@echo "Priority: optional" >> build/deb/DEBIAN/control
+	@echo "Architecture: amd64" >> build/deb/DEBIAN/control
+	@echo "Maintainer: VibeCoding Team" >> build/deb/DEBIAN/control
+	@echo "Description: VibeCoding GUI (Flutter)" >> build/deb/DEBIAN/control
+	dpkg-deb --build build/deb vibecoding-gui-$(DEB_VERSION)-amd64.deb
+	@echo "✅ .deb: vibecoding-gui-$(DEB_VERSION)-amd64.deb"
