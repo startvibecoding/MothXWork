@@ -43,7 +43,7 @@ class _GlobalSettingsDialogState extends State<GlobalSettingsDialog> {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(24),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 900, maxHeight: 680),
+        constraints: const BoxConstraints(maxWidth: 950, maxHeight: 720),
         child: Container(
           decoration: BoxDecoration(
             color: c.primary,
@@ -126,7 +126,7 @@ class _GlobalSettingsDialogState extends State<GlobalSettingsDialog> {
                     // Content
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(24),
                         child: _buildTabContent(c),
                       ),
                     ),
@@ -315,6 +315,10 @@ class _ProvidersTab extends StatelessWidget {
                         Text('Base URL: ${p['baseUrl'] ?? ''}',
                             style: TextStyle(
                                 color: c.textTertiary, fontSize: 12)),
+                        if (p['vendor'] != null && p['vendor'].toString().isNotEmpty)
+                          Text('Vendor: ${p['vendor']}',
+                              style: TextStyle(
+                                  color: c.textTertiary, fontSize: 12)),
                       ],
                     ),
                   ),
@@ -333,9 +337,13 @@ class _ProvidersTab extends StatelessWidget {
     Map<String, dynamic> p;
     if (isNew) {
       p = {
+        'vendor': '',
         'apiKey': '',
         'baseUrl': '',
+        'httpProxy': '',
         'api': 'openai-chat',
+        'thinkingFormat': '',
+        'cacheControl': false,
         'models': <Map<String, dynamic>>[],
       };
     } else {
@@ -343,52 +351,210 @@ class _ProvidersTab extends StatelessWidget {
     }
 
     final idCtrl = TextEditingController(text: id ?? '');
+    final vendorCtrl = TextEditingController(text: (p['vendor'] ?? '').toString());
     final keyCtrl = TextEditingController(text: (p['apiKey'] ?? '').toString());
     final urlCtrl = TextEditingController(text: (p['baseUrl'] ?? '').toString());
+    final proxyCtrl = TextEditingController(text: (p['httpProxy'] ?? '').toString());
     final apiCtrl = TextEditingController(text: (p['api'] ?? 'openai-chat').toString());
+    final formatCtrl = TextEditingController(text: (p['thinkingFormat'] ?? '').toString());
+    
+    bool cacheControlVal = p['cacheControl'] == true;
+    String apiVal = apiCtrl.text;
+    String formatVal = formatCtrl.text;
+
+    // Load models as a stateful Dart List of Maps
+    final modelsList = List<Map<String, dynamic>>.from(
+      (p['models'] as List?)?.map((item) => Map<String, dynamic>.from(item as Map)) ?? []
+    );
 
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: c.secondary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        title: Text(isNew ? 'Add Provider' : 'Edit $id',
-            style: TextStyle(color: c.textPrimary)),
-        content: SizedBox(
-          width: 480,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (isNew)
-                _settingField(c, 'Provider ID', idCtrl, 'e.g. my-openai'),
-              _settingField(c, 'API Key', keyCtrl, '\${MY_API_KEY}'),
-              _settingField(c, 'Base URL', urlCtrl, 'https://api.openai.com/v1'),
-              _settingField(c, 'API Type', apiCtrl, 'openai-chat / anthropic-messages'),
-            ],
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (context, setStateDialog) => AlertDialog(
+          backgroundColor: c.secondary,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          title: Text(isNew ? 'Add Provider' : 'Edit $id',
+              style: TextStyle(color: c.textPrimary)),
+          content: SizedBox(
+            width: 580,
+            height: 620,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isNew)
+                    _settingField(c, 'Provider ID (e.g. my-openai)', idCtrl, 'my-openai'),
+                  _settingField(c, 'Vendor Adapter (e.g. openai, anthropic, deepseek)', vendorCtrl, 'openai'),
+                  _settingField(c, 'API Key', keyCtrl, '\${MY_API_KEY}'),
+                  _settingField(c, 'Base URL', urlCtrl, 'https://api.openai.com/v1'),
+                  _settingField(c, 'HTTP Proxy (Optional)', proxyCtrl, 'http://127.0.0.1:7890'),
+                  _settingDropdown(c, 'API Type (api)', apiVal, ['openai-chat', 'anthropic-messages'], (v) {
+                    setStateDialog(() {
+                      apiVal = v;
+                      apiCtrl.text = v;
+                    });
+                  }),
+                  _settingDropdown(c, 'Thinking Format (thinkingFormat)', formatVal, ['', 'openai', 'anthropic', 'deepseek', 'xiaomi'], (v) {
+                    setStateDialog(() {
+                      formatVal = v;
+                      formatCtrl.text = v;
+                    });
+                  }),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: cacheControlVal,
+                        activeColor: c.accent,
+                        onChanged: (v) {
+                          setStateDialog(() {
+                            cacheControlVal = v ?? false;
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      Text('Enable Prompt Cache (cacheControl)', style: TextStyle(color: c.textPrimary, fontSize: 13)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      children: [
+                        Text('Models (CRUD Management)',
+                            style: TextStyle(color: c.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+                        const Spacer(),
+                        TextButton.icon(
+                          onPressed: () {
+                            final newModel = <String, dynamic>{
+                              'id': '',
+                              'name': '',
+                              'input': ['text'],
+                            };
+                            _editModelForm(context, newModel, () {
+                              setStateDialog(() {
+                                modelsList.add(newModel);
+                              });
+                            });
+                          },
+                          icon: Icon(Icons.add, size: 14, color: c.accent),
+                          label: Text('Add Model', style: TextStyle(color: c.accent, fontSize: 12)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    height: 220,
+                    decoration: BoxDecoration(
+                      color: c.primary,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: c.separator),
+                    ),
+                    child: modelsList.isEmpty
+                        ? Center(
+                            child: Text('No models configured for this provider.',
+                                style: TextStyle(color: c.textTertiary, fontSize: 13)),
+                          )
+                        : ListView.separated(
+                            padding: const EdgeInsets.all(8),
+                            itemCount: modelsList.length,
+                            separatorBuilder: (context, idx) => Divider(color: c.separator, height: 1),
+                            itemBuilder: (context, idx) {
+                              final m = modelsList[idx];
+                              final mId = m['id'] ?? '';
+                              final mName = m['name'] ?? mId;
+                              
+                              final infoParts = <String>[];
+                              if (m['reasoning'] == true) infoParts.add('Reasoning');
+                              if (m['contextWindow'] != null) {
+                                final cw = m['contextWindow'];
+                                infoParts.add('Ctx: ${cw >= 1000000 ? "${(cw/1000000).toStringAsFixed(1)}M" : "${(cw/1000).toStringAsFixed(0)}K"}');
+                              }
+                              if (m['temperature'] != null) infoParts.add('Temp: ${m['temperature']}');
+                              if (m['input'] is List) {
+                                infoParts.add('Inputs: ${(m['input'] as List).join(',')}');
+                              }
+                              
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.psychology_outlined, color: c.accent, size: 18),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(mName, style: TextStyle(color: c.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
+                                          if (mName != mId && mId.toString().isNotEmpty)
+                                            Text(mId, style: TextStyle(color: c.textTertiary, fontSize: 10, fontFamily: 'monospace')),
+                                          const SizedBox(height: 2),
+                                          Text(infoParts.join(' | '), style: TextStyle(color: c.textSecondary, fontSize: 10)),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.edit, color: c.textSecondary, size: 16),
+                                      tooltip: 'Edit Model',
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                      onPressed: () {
+                                        _editModelForm(context, modelsList[idx], () {
+                                          setStateDialog(() {});
+                                        });
+                                      },
+                                    ),
+                                    const SizedBox(width: 8),
+                                    IconButton(
+                                      icon: Icon(Icons.delete_outline, color: c.accentRed, size: 16),
+                                      tooltip: 'Delete Model',
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                      onPressed: () {
+                                        setStateDialog(() {
+                                          modelsList.removeAt(idx);
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: Text('Cancel', style: TextStyle(color: c.textSecondary)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: c.accent, foregroundColor: Colors.white),
+              onPressed: () {
+                final newId = idCtrl.text.trim();
+                if (newId.isEmpty) return;
+                p['vendor'] = vendorCtrl.text.trim();
+                p['apiKey'] = keyCtrl.text.trim();
+                p['baseUrl'] = urlCtrl.text.trim();
+                p['httpProxy'] = proxyCtrl.text.trim();
+                p['api'] = apiCtrl.text.trim();
+                p['thinkingFormat'] = formatCtrl.text.trim();
+                p['cacheControl'] = cacheControlVal;
+                p['models'] = modelsList;
+
+                if (!isNew && id != newId) providerMap.remove(id);
+                providerMap[newId] = p;
+                Navigator.pop(dialogCtx);
+                onChanged();
+              },
+              child: const Text('Save'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: c.textSecondary)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: c.accent, foregroundColor: Colors.white),
-            onPressed: () {
-              final newId = idCtrl.text.trim();
-              if (newId.isEmpty) return;
-              p['apiKey'] = keyCtrl.text;
-              p['baseUrl'] = urlCtrl.text;
-              p['api'] = apiCtrl.text;
-              if (!isNew && id != newId) providerMap.remove(id);
-              providerMap[newId] = p;
-              Navigator.pop(context);
-              onChanged();
-            },
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
   }
@@ -425,6 +591,196 @@ class _ProvidersTab extends StatelessWidget {
       ),
     );
   }
+
+  Widget _settingDropdown(AppColors c, String label, String currentVal, List<String> items, ValueChanged<String> onChanged) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: TextStyle(color: c.textSecondary, fontSize: 11, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: c.primary,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: c.separator),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: items.contains(currentVal) ? currentVal : items.first,
+                dropdownColor: c.secondary,
+                isExpanded: true,
+                style: TextStyle(color: c.textPrimary, fontSize: 13),
+                icon: Icon(Icons.keyboard_arrow_down, color: c.textSecondary),
+                items: items.map((v) => DropdownMenuItem(value: v, child: Text(v == '' ? 'None (default)' : v))).toList(),
+                onChanged: (v) {
+                  if (v != null) onChanged(v);
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _editModelForm(BuildContext context, Map<String, dynamic> model, VoidCallback onSaved) {
+    final idCtrl = TextEditingController(text: (model['id'] ?? '').toString());
+    final nameCtrl = TextEditingController(text: (model['name'] ?? '').toString());
+    final contextCtrl = TextEditingController(text: (model['contextWindow'] ?? '').toString());
+    final maxTokensCtrl = TextEditingController(text: (model['maxTokens'] ?? '').toString());
+    final tempCtrl = TextEditingController(text: (model['temperature'] ?? '').toString());
+    final topPCtrl = TextEditingController(text: (model['top_p'] ?? '').toString());
+    
+    bool reasoningVal = model['reasoning'] == true;
+    
+    final inputList = List<String>.from(model['input'] ?? ['text']);
+    bool hasText = inputList.contains('text');
+    bool hasImage = inputList.contains('image');
+    bool hasAudio = inputList.contains('audio');
+    bool hasVideo = inputList.contains('video');
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (context, setStateModel) => AlertDialog(
+          backgroundColor: c.secondary,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          title: Text(model['id'] == null || model['id'].toString().isEmpty ? 'Add Model' : 'Configure ${model['id']}',
+              style: TextStyle(color: c.textPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
+          content: SizedBox(
+            width: 480,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _settingField(c, 'Model ID', idCtrl, 'e.g. gpt-4o'),
+                  _settingField(c, 'Display Name', nameCtrl, 'e.g. GPT-4o'),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: reasoningVal,
+                        activeColor: c.accent,
+                        onChanged: (v) {
+                          setStateModel(() {
+                            reasoningVal = v ?? false;
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      Text('Reasoning / Thinking Model (reasoning)', style: TextStyle(color: c.textPrimary, fontSize: 13)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(child: _settingField(c, 'Context Window', contextCtrl, 'e.g. 128000')),
+                      const SizedBox(width: 12),
+                      Expanded(child: _settingField(c, 'Max Output Tokens', maxTokensCtrl, 'e.g. 4096')),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Expanded(child: _settingField(c, 'Temperature (0.0 - 2.0)', tempCtrl, 'e.g. 0.7')),
+                      const SizedBox(width: 12),
+                      Expanded(child: _settingField(c, 'Top P (0.0 - 1.0)', topPCtrl, 'e.g. 0.9')),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Input Modalities', style: TextStyle(color: c.textSecondary, fontSize: 12, fontWeight: FontWeight.w500)),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      _modalityCheckbox('Text', hasText, (v) => setStateModel(() => hasText = v)),
+                      _modalityCheckbox('Image', hasImage, (v) => setStateModel(() => hasImage = v)),
+                      _modalityCheckbox('Audio', hasAudio, (v) => setStateModel(() => hasAudio = v)),
+                      _modalityCheckbox('Video', hasVideo, (v) => setStateModel(() => hasVideo = v)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: Text('Cancel', style: TextStyle(color: c.textSecondary)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: c.accent, foregroundColor: Colors.white),
+              onPressed: () {
+                final newId = idCtrl.text.trim();
+                if (newId.isEmpty) return;
+                model['id'] = newId;
+                model['name'] = nameCtrl.text.trim().isEmpty ? newId : nameCtrl.text.trim();
+                model['reasoning'] = reasoningVal;
+                
+                final ctxVal = int.tryParse(contextCtrl.text.trim());
+                if (ctxVal != null) {
+                  model['contextWindow'] = ctxVal;
+                } else {
+                  model.remove('contextWindow');
+                }
+                
+                final maxTokVal = int.tryParse(maxTokensCtrl.text.trim());
+                if (maxTokVal != null) {
+                  model['maxTokens'] = maxTokVal;
+                } else {
+                  model.remove('maxTokens');
+                }
+                
+                final tempVal = double.tryParse(tempCtrl.text.trim());
+                if (tempVal != null) {
+                  model['temperature'] = tempVal;
+                } else {
+                  model.remove('temperature');
+                }
+                
+                final topPVal = double.tryParse(topPCtrl.text.trim());
+                if (topPVal != null) {
+                  model['top_p'] = topPVal;
+                } else {
+                  model.remove('top_p');
+                }
+                
+                final selectedInputs = <String>[];
+                if (hasText) selectedInputs.add('text');
+                if (hasImage) selectedInputs.add('image');
+                if (hasAudio) selectedInputs.add('audio');
+                if (hasVideo) selectedInputs.add('video');
+                model['input'] = selectedInputs;
+
+                onSaved();
+                Navigator.pop(dialogCtx);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _modalityCheckbox(String label, bool value, ValueChanged<bool> onChanged) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Checkbox(
+          value: value,
+          activeColor: c.accent,
+          onChanged: (v) => onChanged(v ?? false),
+        ),
+        Text(label, style: TextStyle(color: c.textPrimary, fontSize: 12)),
+        const SizedBox(width: 8),
+      ],
+    );
+  }
 }
 
 // ===========================================================================
@@ -450,6 +806,9 @@ class _GeneralTab extends StatefulWidget {
 class _GeneralTabState extends State<_GeneralTab> {
   late TextEditingController _contextTokensCtrl;
   late TextEditingController _outputTokensCtrl;
+  late TextEditingController _skillsDirCtrl;
+  late TextEditingController _shellPathCtrl;
+  late TextEditingController _shellPrefixCtrl;
 
   @override
   void initState() {
@@ -458,12 +817,21 @@ class _GeneralTabState extends State<_GeneralTab> {
         text: (widget.settings['maxContextTokens'] ?? 1000000).toString());
     _outputTokensCtrl = TextEditingController(
         text: (widget.settings['maxOutputTokens'] ?? 384000).toString());
+    _skillsDirCtrl = TextEditingController(
+        text: (widget.settings['skillsDir'] ?? '').toString());
+    _shellPathCtrl = TextEditingController(
+        text: (widget.settings['shellPath'] ?? '').toString());
+    _shellPrefixCtrl = TextEditingController(
+        text: (widget.settings['shellCommandPrefix'] ?? '').toString());
   }
 
   @override
   void dispose() {
     _contextTokensCtrl.dispose();
     _outputTokensCtrl.dispose();
+    _skillsDirCtrl.dispose();
+    _shellPathCtrl.dispose();
+    _shellPrefixCtrl.dispose();
     super.dispose();
   }
 
@@ -476,16 +844,19 @@ class _GeneralTabState extends State<_GeneralTab> {
         : [];
     final models = modelsRaw.whereType<Map>().toList();
 
+    bool planToolVal = widget.settings['enablePlanTool'] != false;
+    bool updateCheckVal = widget.settings['updateCheck'] != false;
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('General',
+          Text('General Settings',
               style: TextStyle(
                   color: widget.c.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w600)),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           _section('Default Provider'),
           const SizedBox(height: 8),
           _dropdown(widget.c, 'Provider', providerId, providersMap.keys.toList(),
@@ -526,17 +897,82 @@ class _GeneralTabState extends State<_GeneralTab> {
                 widget.onChanged();
               }),
           const SizedBox(height: 16),
-          _section('Max Context Tokens'),
-          const SizedBox(height: 8),
-          _intField(widget.c, _contextTokensCtrl, (v) {
-            widget.settings['maxContextTokens'] = int.tryParse(v) ?? 1000000;
-          }),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _section('Max Context Tokens'),
+                    const SizedBox(height: 8),
+                    _intField(widget.c, _contextTokensCtrl, (v) {
+                      widget.settings['maxContextTokens'] = int.tryParse(v) ?? 1000000;
+                    }),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _section('Max Output Tokens'),
+                    const SizedBox(height: 8),
+                    _intField(widget.c, _outputTokensCtrl, (v) {
+                      widget.settings['maxOutputTokens'] = int.tryParse(v) ?? 384000;
+                    }),
+                  ],
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
-          _section('Max Output Tokens'),
+          _section('Skills Directory'),
           const SizedBox(height: 8),
-          _intField(widget.c, _outputTokensCtrl, (v) {
-            widget.settings['maxOutputTokens'] = int.tryParse(v) ?? 384000;
-          }),
+          _textField(widget.c, _skillsDirCtrl, (v) {
+            widget.settings['skillsDir'] = v;
+          }, 'e.g. ~/.vibecoding/skills'),
+          const SizedBox(height: 16),
+          _section('Shell Path'),
+          const SizedBox(height: 8),
+          _textField(widget.c, _shellPathCtrl, (v) {
+            widget.settings['shellPath'] = v;
+          }, 'e.g. /bin/bash'),
+          const SizedBox(height: 16),
+          _section('Shell Command Prefix'),
+          const SizedBox(height: 8),
+          _textField(widget.c, _shellPrefixCtrl, (v) {
+            widget.settings['shellCommandPrefix'] = v;
+          }, 'e.g. bash -c'),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Checkbox(
+                value: planToolVal,
+                activeColor: widget.c.accent,
+                onChanged: (v) {
+                  widget.settings['enablePlanTool'] = v ?? true;
+                  widget.onChanged();
+                },
+              ),
+              const SizedBox(width: 8),
+              Text('Enable Plan Tool (enablePlanTool)', style: TextStyle(color: widget.c.textPrimary, fontSize: 13)),
+            ],
+          ),
+          Row(
+            children: [
+              Checkbox(
+                value: updateCheckVal,
+                activeColor: widget.c.accent,
+                onChanged: (v) {
+                  widget.settings['updateCheck'] = v ?? true;
+                  widget.onChanged();
+                },
+              ),
+              const SizedBox(width: 8),
+              Text('Check for updates on startup (updateCheck)', style: TextStyle(color: widget.c.textPrimary, fontSize: 13)),
+            ],
+          ),
           const SizedBox(height: 16),
           _section('Theme'),
           const SizedBox(height: 8),
@@ -614,31 +1050,56 @@ class _GeneralTabState extends State<_GeneralTab> {
   }
 
   Widget _intField(AppColors c, TextEditingController ctrl, ValueChanged<String> onChanged) {
-    return SizedBox(
-      width: 200,
-      child: TextField(
-        controller: ctrl,
-        style: TextStyle(color: c.textPrimary, fontSize: 14),
-        keyboardType: TextInputType.number,
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: c.secondary,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: c.separator),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: c.separator),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: c.accent),
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    return TextField(
+      controller: ctrl,
+      style: TextStyle(color: c.textPrimary, fontSize: 14),
+      keyboardType: TextInputType.number,
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: c.secondary,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: c.separator),
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: c.separator),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: c.accent),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      ),
+    );
+  }
+
+  Widget _textField(AppColors c, TextEditingController ctrl, ValueChanged<String> onChanged, String hint) {
+    return TextField(
+      controller: ctrl,
+      style: TextStyle(color: c.textPrimary, fontSize: 14),
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: c.textTertiary, fontSize: 13),
+        filled: true,
+        fillColor: c.secondary,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: c.separator),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: c.separator),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: c.accent),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       ),
     );
   }
@@ -661,17 +1122,19 @@ class _ApprovalTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final approval = settings['approval'] as Map<String, dynamic>? ?? {};
-    final whitelist =
-        (approval['bashWhitelist'] as List?)?.cast<String>() ?? [];
+    final whitelist = (approval['bashWhitelist'] as List?)?.cast<String>() ?? [];
+    final blacklist = (approval['bashBlacklist'] as List?)?.cast<String>() ?? [];
+    
     final confirmWrite = approval['confirmBeforeWrite'] == true;
-    final confirmCtrl =
-        TextEditingController(text: whitelist.join('\n'));
+
+    final whitelistCtrl = TextEditingController(text: whitelist.join('\n'));
+    final blacklistCtrl = TextEditingController(text: blacklist.join('\n'));
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Approval',
+          Text('Approval Settings',
               style: TextStyle(
                   color: c.textPrimary,
                   fontSize: 16,
@@ -683,16 +1146,56 @@ class _ApprovalTab extends StatelessWidget {
                   fontSize: 14,
                   fontWeight: FontWeight.w500)),
           const SizedBox(height: 4),
-          Text('One command prefix per line. Commands starting with these are auto-approved.',
+          Text('One command prefix per line. Commands starting with these are auto-approved in agent mode.',
               style: TextStyle(color: c.textTertiary, fontSize: 12)),
           const SizedBox(height: 8),
           TextField(
-            controller: confirmCtrl,
-            maxLines: 6,
+            controller: whitelistCtrl,
+            maxLines: 4,
             style: TextStyle(color: c.textPrimary, fontSize: 13,
                 fontFamily: 'monospace'),
             onChanged: (v) {
               approval['bashWhitelist'] = v.split('\n')
+                  .map((e) => e.trim())
+                  .where((e) => e.isNotEmpty)
+                  .toList();
+              settings['approval'] = approval;
+            },
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: c.secondary,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: c.separator),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: c.separator),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: c.accent),
+              ),
+              contentPadding: const EdgeInsets.all(14),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text('Bash Command Blacklist',
+              style: TextStyle(
+                  color: c.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500)),
+          const SizedBox(height: 4),
+          Text('One command prefix per line. Commands starting with these always require approval.',
+              style: TextStyle(color: c.textTertiary, fontSize: 12)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: blacklistCtrl,
+            maxLines: 4,
+            style: TextStyle(color: c.textPrimary, fontSize: 13,
+                fontFamily: 'monospace'),
+            onChanged: (v) {
+              approval['bashBlacklist'] = v.split('\n')
                   .map((e) => e.trim())
                   .where((e) => e.isNotEmpty)
                   .toList();
@@ -729,7 +1232,7 @@ class _ApprovalTab extends StatelessWidget {
                 },
               ),
               const SizedBox(width: 8),
-              Text('Confirm before write operations',
+              Text('Confirm before write/edit operations (confirmBeforeWrite)',
                   style: TextStyle(color: c.textPrimary, fontSize: 14)),
             ],
           ),
@@ -760,11 +1263,24 @@ class _SandboxTab extends StatelessWidget {
     final level = (sandbox['level'] ?? 'none').toString();
     final allowNetwork = sandbox['allowNetwork'] == true;
 
+    final bwrapCtrl = TextEditingController(text: (sandbox['bwrapPath'] ?? '').toString());
+    final tmpSizeCtrl = TextEditingController(text: (sandbox['tmpSize'] ?? '').toString());
+
+    final readPaths = (sandbox['allowedRead'] as List?)?.cast<String>() ?? [];
+    final writePaths = (sandbox['allowedWrite'] as List?)?.cast<String>() ?? [];
+    final deniedPaths = (sandbox['deniedPaths'] as List?)?.cast<String>() ?? [];
+    final passEnv = (sandbox['passEnv'] as List?)?.cast<String>() ?? [];
+
+    final readCtrl = TextEditingController(text: readPaths.join('\n'));
+    final writeCtrl = TextEditingController(text: writePaths.join('\n'));
+    final deniedCtrl = TextEditingController(text: deniedPaths.join('\n'));
+    final envCtrl = TextEditingController(text: passEnv.join('\n'));
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Sandbox',
+          Text('Sandbox Settings',
               style: TextStyle(
                   color: c.textPrimary,
                   fontSize: 16,
@@ -782,12 +1298,12 @@ class _SandboxTab extends StatelessWidget {
                 },
               ),
               const SizedBox(width: 8),
-              Text('Enable sandbox execution',
+              Text('Enable sandbox execution (bubblewrap/bwrap)',
                   style: TextStyle(color: c.textPrimary, fontSize: 14)),
             ],
           ),
           const SizedBox(height: 16),
-          Text('Level',
+          Text('Sandbox Protection Level',
               style: TextStyle(
                   color: c.textSecondary,
                   fontSize: 14,
@@ -829,8 +1345,123 @@ class _SandboxTab extends StatelessWidget {
                   style: TextStyle(color: c.textPrimary, fontSize: 14)),
             ],
           ),
+          const SizedBox(height: 16),
+          _section('Bubblewrap Path (bwrapPath)'),
+          const SizedBox(height: 8),
+          _textField(c, bwrapCtrl, (v) {
+            sandbox['bwrapPath'] = v;
+            settings['sandbox'] = sandbox;
+          }, 'e.g. /usr/bin/bwrap'),
+          const SizedBox(height: 16),
+          _section('Sandbox TmpFS Size (tmpSize)'),
+          const SizedBox(height: 8),
+          _textField(c, tmpSizeCtrl, (v) {
+            sandbox['tmpSize'] = v;
+            settings['sandbox'] = sandbox;
+          }, 'e.g. 128M'),
+          const SizedBox(height: 20),
+          _sandboxPathField('Allowed Read Paths (allowedRead)', readCtrl, (paths) {
+            sandbox['allowedRead'] = paths;
+            settings['sandbox'] = sandbox;
+          }),
+          const SizedBox(height: 20),
+          _sandboxPathField('Allowed Write Paths (allowedWrite)', writeCtrl, (paths) {
+            sandbox['allowedWrite'] = paths;
+            settings['sandbox'] = sandbox;
+          }),
+          const SizedBox(height: 20),
+          _sandboxPathField('Explicitly Denied Paths (deniedPaths)', deniedCtrl, (paths) {
+            sandbox['deniedPaths'] = paths;
+            settings['sandbox'] = sandbox;
+          }),
+          const SizedBox(height: 20),
+          _sandboxPathField('Passed Environment Variables (passEnv)', envCtrl, (vars) {
+            sandbox['passEnv'] = vars;
+            settings['sandbox'] = sandbox;
+          }),
         ],
       ),
+    );
+  }
+
+  Widget _section(String text) => Text(text,
+      style: TextStyle(
+          color: c.textSecondary,
+          fontSize: 11,
+          letterSpacing: 0.5,
+          fontWeight: FontWeight.w500));
+
+  Widget _textField(AppColors c, TextEditingController ctrl, ValueChanged<String> onChanged, String hint) {
+    return TextField(
+      controller: ctrl,
+      style: TextStyle(color: c.textPrimary, fontSize: 14),
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: c.textTertiary, fontSize: 13),
+        filled: true,
+        fillColor: c.secondary,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: c.separator),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: c.separator),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: c.accent),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      ),
+    );
+  }
+
+  Widget _sandboxPathField(String label, TextEditingController ctrl, ValueChanged<List<String>> onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: TextStyle(
+                color: c.textSecondary,
+                fontSize: 14,
+                fontWeight: FontWeight.w500)),
+        const SizedBox(height: 4),
+        Text('One path or item per line.',
+            style: TextStyle(color: c.textTertiary, fontSize: 12)),
+        const SizedBox(height: 8),
+        TextField(
+          controller: ctrl,
+          maxLines: 3,
+          style: TextStyle(color: c.textPrimary, fontSize: 13, fontFamily: 'monospace'),
+          onChanged: (v) {
+            final items = v.split('\n')
+                .map((e) => e.trim())
+                .where((e) => e.isNotEmpty)
+                .toList();
+            onChanged(items);
+          },
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: c.secondary,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: c.separator),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: c.separator),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: c.accent),
+            ),
+            contentPadding: const EdgeInsets.all(12),
+          ),
+        ),
+      ],
     );
   }
 }

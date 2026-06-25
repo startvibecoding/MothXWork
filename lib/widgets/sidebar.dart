@@ -50,12 +50,12 @@ class Sidebar extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('VibeCoding',
+                    Text('VibeWork',
                         style: TextStyle(
                             color: c.textPrimary,
                             fontSize: 18,
                             fontWeight: FontWeight.w600)),
-                    Text('AI Coding Assistant',
+                    Text('Power By VibeCoding',
                         style:
                             TextStyle(color: c.textSecondary, fontSize: 11)),
                   ],

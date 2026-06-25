@@ -128,6 +128,19 @@ class AcpClient {
     final sessionUpdate = (update['sessionUpdate'] ?? '').toString();
 
     switch (sessionUpdate) {
+      case 'user_message_chunk':
+        final content = update['content'] as Map<String, dynamic>?;
+        final text = content?['text']?.toString() ?? '';
+        _events.add(AcpEvent(
+          type: 'user_content',
+          sessionId: sessionId,
+          content: text,
+          data: {
+            'type': content?['type'],
+            'chunkType': sessionUpdate,
+          },
+        ));
+        break;
       case 'agent_thought_chunk':
       case 'agent_message_chunk':
         final content = update['content'] as Map<String, dynamic>?;
@@ -258,8 +271,15 @@ class AcpClient {
     return sessionId;
   }
 
-  Future<void> loadSession(String sessionId, String cwd) async {
-    await _call('session/load', {'sessionId': sessionId, 'cwd': cwd});
+  Future<void> loadSession(String sessionId, String cwd, {int? limit}) async {
+    final Map<String, dynamic> params = {
+      'sessionId': sessionId,
+      'cwd': cwd,
+    };
+    if (limit != null) {
+      params['limit'] = limit;
+    }
+    await _call('session/load', params);
     sessions.add(sessionId);
   }
 

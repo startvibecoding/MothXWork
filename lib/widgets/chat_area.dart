@@ -16,6 +16,8 @@ class ChatArea extends StatefulWidget {
 
 class _ChatAreaState extends State<ChatArea> {
   final ScrollController _scroll = ScrollController();
+  int _prevMessageCount = 0;
+  double _prevMaxScroll = 0.0;
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -35,7 +37,31 @@ class _ChatAreaState extends State<ChatArea> {
     final app = context.watch<AppState>();
     final messages = app.messages;
 
-    _scrollToBottom();
+    // Detect if we just prepended messages (history load)
+    if (_prevMessageCount > 0 && messages.length > _prevMessageCount && !app.isLoading && !messages.any((m) => m.isStreaming)) {
+      final oldMaxScroll = _prevMaxScroll;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scroll.hasClients && oldMaxScroll > 0) {
+          final newMaxScroll = _scroll.position.maxScrollExtent;
+          final diff = newMaxScroll - oldMaxScroll;
+          if (diff > 0) {
+            _scroll.jumpTo(_scroll.offset + diff);
+          }
+        }
+      });
+    }
+
+    _prevMessageCount = messages.length;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scroll.hasClients) {
+        _prevMaxScroll = _scroll.position.maxScrollExtent;
+      }
+    });
+
+    final shouldScroll = app.isLoading || (messages.isNotEmpty && messages.last.isStreaming);
+    if (shouldScroll) {
+      _scrollToBottom();
+    }
 
     return Container(
       color: c.primary,
@@ -45,14 +71,20 @@ class _ChatAreaState extends State<ChatArea> {
               controller: _scroll,
               padding: const EdgeInsets.all(24),
               itemCount: messages.length +
-                  (app.isLoading && !messages.any((m) => m.isStreaming)
-                      ? 1
-                      : 0),
+                  (app.isLoading && !messages.any((m) => m.isStreaming) ? 1 : 0) +
+                  (app.hasMoreHistory ? 1 : 0),
               itemBuilder: (context, index) {
-                if (index >= messages.length) {
+                int msgIndex = index;
+                if (app.hasMoreHistory) {
+                  if (index == 0) {
+                    return const _LoadMoreButton();
+                  }
+                  msgIndex = index - 1;
+                }
+                if (msgIndex >= messages.length) {
                   return const _TypingIndicator();
                 }
-                return _MessageBubble(message: messages[index]);
+                return _MessageBubble(message: messages[msgIndex]);
               },
             ),
     );
@@ -80,7 +112,7 @@ class _EmptyState extends StatelessWidget {
             child: Icon(Icons.bolt, size: 56, color: c.accent),
           ),
           const SizedBox(height: 16),
-          Text('VibeCoding GUI',
+          Text('VibeWork',
               style: TextStyle(
                   color: c.textPrimary,
                   fontSize: 24,
@@ -136,15 +168,12 @@ class _MessageBubble extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (isUser)
-              SelectableText(message.content,
-                  style: TextStyle(color: fg, fontSize: 15))
-            else
-              MarkdownBody(
-                data: message.content.isEmpty ? '...' : message.content,
-                selectable: true,
-                styleSheet: _markdownStyle(context, fg),
-              ),
+            MarkdownBody(
+              data: message.content.isEmpty ? '...' : message.content,
+              selectable: true,
+              softLineBreak: true,
+              styleSheet: _markdownStyle(context, fg),
+            ),
             const SizedBox(height: 6),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -253,6 +282,58 @@ class _TypingIndicator extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _LoadMoreButton extends StatefulWidget {
+  const _LoadMoreButton();
+
+  @override
+  State<_LoadMoreButton> createState() => _LoadMoreButtonState();
+}
+
+class _LoadMoreButtonState extends State<_LoadMoreButton> {
+  bool _loading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppTheme.of(context);
+    final app = context.read<AppState>();
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: _loading
+            ? SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(c.accent),
+                ),
+              )
+            : TextButton.icon(
+                onPressed: () async {
+                  setState(() => _loading = true);
+                  await app.loadMoreHistory();
+                  if (mounted) setState(() => _loading = false);
+                },
+                icon: Icon(Icons.history, size: 16, color: c.accent),
+                label: Text(
+                  '加载更多历史记录...',
+                  style: TextStyle(color: c.accent, fontSize: 13),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  backgroundColor: c.secondary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(color: c.separator),
+                  ),
+                ),
+              ),
       ),
     );
   }

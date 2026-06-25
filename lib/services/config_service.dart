@@ -50,8 +50,8 @@ class VibeCodingLocator {
 class ConfigService {
   String get _home => Platform.environment['HOME'] ?? '';
 
-  String get _guiDir => '$_home/.vibecoding-gui';
-  String get _settingsPath => '$_home/.vibecoding/settings.json';
+  String get _guiDir => '$_home/.vibework';
+  String get _settingsPath => '$_guiDir/settings.json';
   String get _sessionsPath => '$_guiDir/sessions.json';
   String get _uiPath => '$_guiDir/ui.json';
 
@@ -72,8 +72,7 @@ class ConfigService {
   }
 
   Future<void> saveSettings(Map<String, dynamic> settings) async {
-    final dir = Directory('$_home/.vibecoding');
-    if (!await dir.exists()) await dir.create(recursive: true);
+    await _ensureGuiDir();
     final encoder = const JsonEncoder.withIndent('  ');
     await File(_settingsPath).writeAsString(encoder.convert(settings));
   }

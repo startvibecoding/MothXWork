@@ -16,14 +16,14 @@ void main() {
   runApp(
     ChangeNotifierProvider(
       create: (_) => AppState()..init(),
-      child: const VibeCodingApp(),
+      child: const VibeWorkApp(),
     ),
   );
 }
 
 /// Root widget: decides theme, wraps MaterialApp, shows permission overlay.
-class VibeCodingApp extends StatelessWidget {
-  const VibeCodingApp({super.key});
+class VibeWorkApp extends StatelessWidget {
+  const VibeWorkApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,7 @@ class VibeCodingApp extends StatelessWidget {
       colors: colors,
       isDark: isDark,
       child: MaterialApp(
-        title: 'VibeCoding GUI',
+        title: 'VibeWork',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           brightness: isDark ? Brightness.dark : Brightness.light,
@@ -108,7 +108,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AppTheme.of(context);
     final app = context.watch<AppState>();
-    final sessionName = app.sessionName(app.currentSessionId) ?? 'No Session';
+    final sessionName = app.sessionName(app.currentSessionId);
 
     return Container(
       height: 52,
@@ -171,7 +171,7 @@ Future<void> _showRenameDialog(BuildContext context) async {
   final currentId = app.currentSessionId;
   if (currentId == null) return;
 
-  final currentName = app.sessionName(currentId) ?? '';
+  final currentName = app.sessionName(currentId);
   final controller = TextEditingController(text: currentName);
 
   final newName = await showDialog<String>(
