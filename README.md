@@ -1,6 +1,6 @@
-# VibeCoding GUI (Flutter)
+# Mothx GUI (Flutter)
 
-An elegant, high-performance cross-platform desktop GUI client for VibeCoding, built with Flutter and Dart. It communicates with VibeCoding via the Agent Client Protocol (ACP) over stdio.
+An elegant, high-performance cross-platform desktop GUI client for Mothx, built with Flutter and Dart. It communicates with Mothx via the Agent Client Protocol (ACP) over stdio.
 
 ## Features
 
@@ -16,7 +16,7 @@ An elegant, high-performance cross-platform desktop GUI client for VibeCoding, b
 ### Prerequisites
 
 - Flutter SDK (3.38.0+)
-- VibeCoding command-line tool installed (located in your PATH or at `~/go/bin/vibecoding`)
+- Mothx command-line tool installed (located in your PATH or at `~/go/bin/mothx`)
 
 ### Build and Run
 
@@ -48,7 +48,7 @@ This generates a installable `.deb` package in the root directory.
 
 - **lib/main.dart**: Main application entry point, layouts, and permission overlays.
 - **lib/services/app_state.dart**: Centralized ChangeNotifier-based state manager, handles sessions, configurations, and state.
-- **lib/services/acp_client.dart**: Complete JSON-RPC-based Agent Client Protocol (ACP) client communicating with `vibecoding acp` over stdin/stdout.
-- **lib/services/config_service.dart**: Reads/writes configuration for both VibeCoding (`~/.vibecoding/settings.json`) and the GUI (`~/.vibecoding-gui/sessions.json`).
+- **lib/services/acp_client.dart**: Complete JSON-RPC-based Agent Client Protocol (ACP) client communicating with `mothx acp` over stdin/stdout.
+- **lib/services/config_service.dart**: Reads/writes configuration for both Mothx (`~/.mothx/settings.json`) and the GUI (`~/.mothx-gui/sessions.json`).
 - **lib/theme/**: Custom Apple-styled dark/light palette definitions and inheritance.
 - **lib/widgets/**: Modular UI components (ChatArea, InputArea, Sidebar, StatusBar, settings panels).

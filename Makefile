@@ -35,27 +35,27 @@ build:
 	flutter build linux --release
 	mkdir -p $(BUILD_DIR)
 	cp -r $(FLUTTER_BUNDLE)/* $(BUILD_DIR)/
-	@echo "✅ Flutter build completed: $(BUILD_DIR)/vibecoding-gui"
+	@echo "✅ Flutter build completed: $(BUILD_DIR)/mothx-gui"
 
 ## run: Run the built application
 run: build
-	./$(BUILD_DIR)/vibecoding-gui
+	./$(BUILD_DIR)/mothx-gui
 
 ## deb: Build .deb package for Debian/Ubuntu (amd64)
 deb: build
 	@echo "Building .deb package (Flutter)..."
-	mkdir -p build/deb/usr/share/vibecoding-gui build/deb/usr/bin build/deb/DEBIAN
-	cp -r $(FLUTTER_BUNDLE)/* build/deb/usr/share/vibecoding-gui/
-	ln -sf /usr/share/vibecoding-gui/vibecoding-gui build/deb/usr/bin/vibecoding-gui
-	@echo "Package: vibecoding-gui" > build/deb/DEBIAN/control
+	mkdir -p build/deb/usr/share/mothx-gui build/deb/usr/bin build/deb/DEBIAN
+	cp -r $(FLUTTER_BUNDLE)/* build/deb/usr/share/mothx-gui/
+	ln -sf /usr/share/mothx-gui/mothx-gui build/deb/usr/bin/mothx-gui
+	@echo "Package: mothx-gui" > build/deb/DEBIAN/control
 	@echo "Version: $(DEB_VERSION)" >> build/deb/DEBIAN/control
 	@echo "Section: utils" >> build/deb/DEBIAN/control
 	@echo "Priority: optional" >> build/deb/DEBIAN/control
 	@echo "Architecture: amd64" >> build/deb/DEBIAN/control
-	@echo "Maintainer: VibeCoding Team" >> build/deb/DEBIAN/control
-	@echo "Description: VibeCoding GUI (Flutter)" >> build/deb/DEBIAN/control
-	dpkg-deb --build build/deb vibecoding-gui-$(DEB_VERSION)-amd64.deb
-	@echo "✅ .deb package completed: vibecoding-gui-$(DEB_VERSION)-amd64.deb"
+	@echo "Maintainer: Mothx Team" >> build/deb/DEBIAN/control
+	@echo "Description: Mothx GUI (Flutter)" >> build/deb/DEBIAN/control
+	dpkg-deb --build build/deb mothx-gui-$(DEB_VERSION)-amd64.deb
+	@echo "✅ .deb package completed: mothx-gui-$(DEB_VERSION)-amd64.deb"
 
 ## clean: Remove build artifacts
 clean:

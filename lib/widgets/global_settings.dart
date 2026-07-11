@@ -23,6 +23,7 @@ class _GlobalSettingsDialogState extends State<GlobalSettingsDialog> {
     {'icon': Icons.tune, 'label': 'General'},
     {'icon': Icons.shield_outlined, 'label': 'Approval'},
     {'icon': Icons.storage_outlined, 'label': 'Sandbox'},
+    {'icon': Icons.dns_outlined, 'label': 'Serve'},
   ];
 
   @override
@@ -199,6 +200,11 @@ class _GlobalSettingsDialogState extends State<GlobalSettingsDialog> {
       case 3:
         return _SandboxTab(
           settings: _settingsCopy,
+          c: c,
+          onChanged: () => setState(() {}),
+        );
+      case 4:
+        return _ServeTab(
           c: c,
           onChanged: () => setState(() {}),
         );
@@ -931,7 +937,7 @@ class _GeneralTabState extends State<_GeneralTab> {
           const SizedBox(height: 8),
           _textField(widget.c, _skillsDirCtrl, (v) {
             widget.settings['skillsDir'] = v;
-          }, 'e.g. ~/.vibecoding/skills'),
+          }, 'e.g. ~/.mothx/skills'),
           const SizedBox(height: 16),
           _section('Shell Path'),
           const SizedBox(height: 8),
@@ -1462,6 +1468,303 @@ class _SandboxTab extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ===========================================================================
+// Serve Mode Tab
+// ===========================================================================
+class _ServeTab extends StatefulWidget {
+  final AppColors c;
+  final VoidCallback onChanged;
+
+  const _ServeTab({
+    required this.c,
+    required this.onChanged,
+  });
+
+  @override
+  State<_ServeTab> createState() => _ServeTabState();
+}
+
+class _ServeTabState extends State<_ServeTab> {
+  late TextEditingController _baseUrlCtrl;
+  late TextEditingController _authTokenCtrl;
+  bool _connecting = false;
+  String _statusMsg = '';
+
+  @override
+  void initState() {
+    super.initState();
+    final app = context.read<AppState>();
+    _baseUrlCtrl = TextEditingController(text: app.serveBaseUrl ?? 'http://localhost:8080');
+    _authTokenCtrl = TextEditingController(text: app.serveAuthToken ?? '');
+  }
+
+  @override
+  void dispose() {
+    _baseUrlCtrl.dispose();
+    _authTokenCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _connect() async {
+    final app = context.read<AppState>();
+    final baseUrl = _baseUrlCtrl.text.trim();
+    if (baseUrl.isEmpty) return;
+
+    setState(() {
+      _connecting = true;
+      _statusMsg = '';
+    });
+
+    try {
+      final authToken = _authTokenCtrl.text.trim();
+      await app.connectServeMode(baseUrl, authToken: authToken.isEmpty ? null : authToken);
+      final ok = app.isConnected;
+
+      setState(() {
+        _connecting = false;
+        _statusMsg = ok ? 'Connected successfully!' : 'Connection failed. Check URL and auth token.';
+      });
+
+      // Save serve mode config to settings
+      final settings = app.settings;
+      settings['serveMode'] = {
+        'enabled': ok,
+        'baseUrl': baseUrl,
+        'authToken': authToken.isEmpty ? null : authToken,
+      };
+      await app.saveSettings(settings);
+      widget.onChanged();
+    } catch (e) {
+      setState(() {
+        _connecting = false;
+        _statusMsg = 'Error: $e';
+      });
+    }
+  }
+
+  Future<void> _disconnect() async {
+    final app = context.read<AppState>();
+    await app.disconnectServeMode();
+
+    final settings = app.settings;
+    settings['serveMode'] = {'enabled': false};
+    await app.saveSettings(settings);
+
+    setState(() {
+      _statusMsg = 'Disconnected from serve mode.';
+    });
+    widget.onChanged();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.watch<AppState>();
+    final isConnected = app.connectionMode == ConnectionMode.serve && app.isConnected;
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Serve Mode Connection',
+              style: TextStyle(
+                  color: widget.c.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Text(
+            'Connect to a running "mothx serve" instance for shared sessions, stats, cron, and logs.',
+            style: TextStyle(color: widget.c.textSecondary, fontSize: 13),
+          ),
+          const SizedBox(height: 16),
+
+          // Connection status
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: (isConnected ? widget.c.accentGreen : widget.c.textTertiary)
+                  .withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: (isConnected ? widget.c.accentGreen : widget.c.textTertiary)
+                    .withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isConnected ? Icons.check_circle : Icons.circle_outlined,
+                  size: 18,
+                  color: isConnected ? widget.c.accentGreen : widget.c.textTertiary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    isConnected ? 'Connected to serve mode' : 'Not connected (using ACP mode)',
+                    style: TextStyle(
+                      color: isConnected ? widget.c.accentGreen : widget.c.textSecondary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                if (isConnected)
+                  TextButton.icon(
+                    onPressed: _connecting ? null : _disconnect,
+                    icon: const Icon(Icons.link_off, size: 16),
+                    label: const Text('Disconnect', style: TextStyle(fontSize: 12)),
+                    style: TextButton.styleFrom(
+                      foregroundColor: widget.c.accentRed,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Base URL
+          _section('Serve Base URL'),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _baseUrlCtrl,
+            enabled: !_connecting,
+            style: TextStyle(color: widget.c.textPrimary, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: 'http://localhost:8080',
+              hintStyle: TextStyle(color: widget.c.textTertiary),
+              filled: true,
+              fillColor: widget.c.secondary,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: widget.c.separator),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: widget.c.separator),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: widget.c.accent),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Auth Token
+          _section('Auth Token (Optional)'),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _authTokenCtrl,
+            enabled: !_connecting,
+            obscureText: true,
+            style: TextStyle(color: widget.c.textPrimary, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: 'sk-...',
+              hintStyle: TextStyle(color: widget.c.textTertiary),
+              filled: true,
+              fillColor: widget.c.secondary,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: widget.c.separator),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: widget.c.separator),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: widget.c.accent),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Connect button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _connecting ? null : _connect,
+              icon: _connecting
+                  ? SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.link, size: 18),
+              label: Text(_connecting ? 'Connecting...' : 'Connect'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: widget.c.accent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+          ),
+
+          if (_statusMsg.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              _statusMsg,
+              style: TextStyle(
+                color: _statusMsg.contains('Error') || _statusMsg.contains('failed')
+                    ? widget.c.accentRed
+                    : widget.c.accentGreen,
+                fontSize: 12,
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 24),
+
+          // Serve features info
+          _section('Available in Serve Mode'),
+          const SizedBox(height: 8),
+          _featureItem(widget.c, Icons.bar_chart, 'Shared Usage Statistics', 'View token and request stats across all sessions'),
+          _featureItem(widget.c, Icons.schedule, 'Cron Scheduled Tasks', 'Create and manage recurring agent tasks'),
+          _featureItem(widget.c, Icons.terminal, 'Real-time Logs', 'Stream logs via WebSocket from the serve instance'),
+          _featureItem(widget.c, Icons.people, 'Multi-session Support', 'Manage multiple sessions on a shared server'),
+          _featureItem(widget.c, Icons.api, 'OpenAI-compatible API', 'Use serve endpoints with any OpenAI-compatible client'),
+        ],
+      ),
+    );
+  }
+
+  Widget _section(String text) => Text(text,
+      style: TextStyle(
+          color: widget.c.textSecondary,
+          fontSize: 11,
+          letterSpacing: 0.5,
+          fontWeight: FontWeight.w500));
+
+  Widget _featureItem(AppColors c, IconData icon, String title, String desc) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: c.accent),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: TextStyle(color: c.textPrimary, fontSize: 13, fontWeight: FontWeight.w500)),
+                Text(desc,
+                    style: TextStyle(color: c.textTertiary, fontSize: 11)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

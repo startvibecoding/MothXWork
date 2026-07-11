@@ -1,6 +1,6 @@
-# VibeCoding GUI (Flutter 版本)
+# Mothx GUI (Flutter 版本)
 
-基于 Flutter 和 Dart 构建的 VibeCoding 桌面客户端。通过 Agent Client Protocol (ACP) 协议，使用 stdio (stdin/stdout) JSON-RPC 与 VibeCoding 底层引擎进行高效通信。
+基于 Flutter 和 Dart 构建的 Mothx 桌面客户端。通过 Agent Client Protocol (ACP) 协议，使用 stdio (stdin/stdout) JSON-RPC 与 Mothx 底层引擎进行高效通信。
 
 ## 功能特性
 
@@ -16,7 +16,7 @@
 ### 准备工作
 
 - 已安装 Flutter SDK (3.38.0+)
-- 已安装 VibeCoding 命令行可执行文件（在系统 PATH 中，或位于 `~/go/bin/vibecoding`）
+- 已安装 Mothx 命令行可执行文件（在系统 PATH 中，或位于 `~/go/bin/mothx`）
 
 ### 构建与运行
 
@@ -49,6 +49,6 @@ make deb
 - **lib/main.dart**: 客户端主入口，页面基础框架及权限确认弹窗遮罩。
 - **lib/services/app_state.dart**: 基于 ChangeNotifier 的状态管理器，统一协调会话切换、配置加载、通信状态与消息更新。
 - **lib/services/acp_client.dart**: 纯 Dart 实现的 ACP (JSON-RPC) 客户端，封装了底层 stdin 写入与 stdout 实时流监听。
-- **lib/services/config_service.dart**: 配置管理器，读写 VibeCoding 全局配置 (`~/.vibecoding/settings.json`) 以及 GUI 的会话缓存 (`~/.vibecoding-gui/sessions.json`)。
+- **lib/services/config_service.dart**: 配置管理器，读写 Mothx 全局配置 (`~/.mothx/settings.json`) 以及 GUI 的会话缓存 (`~/.mothx-gui/sessions.json`)。
 - **lib/theme/**: Apple 风格配色及 InheritedWidget 主题向下分发。
 - **lib/widgets/**: 模块化的各种界面组件（ChatArea 聊天区, InputArea 输入区, Sidebar 侧边栏, StatusBar 状态栏, 全局/会话设置弹窗等）。

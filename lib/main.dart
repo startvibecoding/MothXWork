@@ -5,10 +5,14 @@ import 'package:provider/provider.dart';
 import 'services/app_state.dart';
 import 'theme/app_theme.dart';
 import 'widgets/chat_area.dart';
+import 'widgets/cron_page.dart';
 import 'widgets/global_settings.dart';
 import 'widgets/input_area.dart';
+import 'widgets/logs_page.dart';
 import 'widgets/permission_dialog.dart';
 import 'widgets/session_settings.dart';
+import 'widgets/sessions_page.dart';
+import 'widgets/stats_page.dart';
 import 'widgets/sidebar.dart';
 import 'widgets/status_bar.dart';
 
@@ -16,14 +20,14 @@ void main() {
   runApp(
     ChangeNotifierProvider(
       create: (_) => AppState()..init(),
-      child: const VibeWorkApp(),
+      child: const MothxApp(),
     ),
   );
 }
 
 /// Root widget: decides theme, wraps MaterialApp, shows permission overlay.
-class VibeWorkApp extends StatelessWidget {
-  const VibeWorkApp({super.key});
+class MothxApp extends StatelessWidget {
+  const MothxApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +39,7 @@ class VibeWorkApp extends StatelessWidget {
       colors: colors,
       isDark: isDark,
       child: MaterialApp(
-        title: 'VibeWork',
+        title: 'Mothx',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           brightness: isDark ? Brightness.dark : Brightness.light,
@@ -84,19 +88,53 @@ class MainLayout extends StatelessWidget {
             onNewSession: () => _showNewSessionDialog(context),
             onOpenSettings: () => _showGlobalSettingsDialog(context),
           ),
-          const Expanded(
-            child: Column(
-              children: [
-                _Header(),
-                Expanded(child: ChatArea()),
-                InputArea(),
-                StatusBar(),
-              ],
+          Expanded(
+            child: _PageRouter(
+              onNewSession: () => _showNewSessionDialog(context),
             ),
           ),
         ],
       ),
     );
+  }
+}
+
+/// Page router: decides which page to show based on AppState.currentPage.
+class _PageRouter extends StatelessWidget {
+  final VoidCallback onNewSession;
+  const _PageRouter({required this.onNewSession});
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.watch<AppState>();
+    switch (app.currentPage) {
+      case 'chat':
+        return Column(
+          children: [
+            const _Header(),
+            Expanded(child: ChatArea()),
+            InputArea(),
+            StatusBar(),
+          ],
+        );
+      case 'sessions':
+        return const SessionsPage();
+      case 'stats':
+        return const StatsPage();
+      case 'cron':
+        return const CronPage();
+      case 'logs':
+        return const LogsPage();
+      default:
+        return Column(
+          children: [
+            const _Header(),
+            Expanded(child: ChatArea()),
+            InputArea(),
+            StatusBar(),
+          ],
+        );
+    }
   }
 }
 
@@ -142,6 +180,32 @@ class _Header extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          // Serve mode indicator
+          if (app.connectionMode == ConnectionMode.serve)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                color: c.accentPurple.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.dns, size: 12, color: c.accentPurple),
+                  const SizedBox(width: 4),
+                  Text(
+                    'SERVE',
+                    style: TextStyle(
+                      color: c.accentPurple,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ],
+              ),
+            ),
           const SessionSettingsButton(),
         ],
       ),

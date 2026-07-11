@@ -112,7 +112,7 @@ class _EmptyState extends StatelessWidget {
             child: Icon(Icons.bolt, size: 56, color: c.accent),
           ),
           const SizedBox(height: 16),
-          Text('VibeWork',
+          Text('Mothx',
               style: TextStyle(
                   color: c.textPrimary,
                   fontSize: 24,

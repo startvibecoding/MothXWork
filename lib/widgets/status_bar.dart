@@ -13,6 +13,8 @@ class StatusBar extends StatelessWidget {
     final app = context.watch<AppState>();
     final connected = app.isConnected;
     final session = app.currentSessionId;
+    final mode = app.connectionMode;
+    final serveUrl = app.serveUrl;
 
     return Container(
       decoration: BoxDecoration(
@@ -34,8 +36,37 @@ class StatusBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
+              // Connection mode badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: (mode == ConnectionMode.serve ? c.accentPurple : c.accent)
+                      .withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  mode == ConnectionMode.serve ? 'SERVE' : 'ACP',
+                  style: TextStyle(
+                    color: mode == ConnectionMode.serve ? c.accentPurple : c.accent,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
               Text(connected ? 'Connected' : 'Disconnected',
                   style: TextStyle(color: c.textSecondary, fontSize: 13)),
+              // Serve URL indicator
+              if (mode == ConnectionMode.serve && serveUrl != null) ...[
+                const SizedBox(width: 8),
+                Text('|', style: TextStyle(color: c.separator)),
+                const SizedBox(width: 8),
+                Text(
+                  serveUrl,
+                  style: TextStyle(color: c.textTertiary, fontSize: 11, fontFamily: 'monospace'),
+                ),
+              ],
               if (session != null) ...[
                 const SizedBox(width: 12),
                 Text('|', style: TextStyle(color: c.separator)),
@@ -44,12 +75,64 @@ class StatusBar extends StatelessWidget {
                     'Session: ${session.length > 8 ? session.substring(0, 8) : session}...',
                     style: TextStyle(color: c.textTertiary, fontSize: 13)),
               ],
+              // Usage indicator
+              if (app.contextSize > 0) ...[
+                const SizedBox(width: 12),
+                Text('|', style: TextStyle(color: c.separator)),
+                const SizedBox(width: 12),
+                _buildUsageIndicator(c, app.contextUsed, app.contextSize, app.currentCost),
+              ],
             ],
           ),
-          Text('${app.messages.length} messages',
-              style: TextStyle(color: c.textTertiary, fontSize: 13)),
+          Row(
+            children: [
+              if (app.isLoading) ...[
+                const SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Text('${app.messages.length} messages',
+                  style: TextStyle(color: c.textTertiary, fontSize: 13)),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildUsageIndicator(AppColors c, int used, int size, double? cost) {
+    final pct = size > 0 ? (used / size * 100).toInt() : 0;
+    final color = pct > 80 ? c.accentRed : pct > 60 ? c.accentOrange : c.accent;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Mini progress bar
+        SizedBox(
+          width: 40,
+          height: 6,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: size > 0 ? used / size : 0,
+              backgroundColor: c.tertiary,
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+              minHeight: 6,
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text('$used/$size',
+            style: TextStyle(color: c.textTertiary, fontSize: 11, fontFamily: 'monospace')),
+        if (cost != null && cost > 0) ...[
+          const SizedBox(width: 6),
+          Text('\$${cost.toStringAsFixed(4)}',
+              style: TextStyle(color: c.textTertiary, fontSize: 11, fontFamily: 'monospace')),
+        ],
+      ],
     );
   }
 }

@@ -3,30 +3,30 @@ import 'dart:io';
 
 import '../models/models.dart';
 
-/// Locates the vibecoding binary, mirroring findVibeCodingBinary() in Go.
-class VibeCodingLocator {
+/// Locates the mothx binary, mirroring findMothxBinary() in Go.
+class MothxLocator {
   static String? find() {
     final candidates = <String>[];
 
     // Next to the executable (bundled).
     try {
       final exeDir = File(Platform.resolvedExecutable).parent.path;
-      candidates.add('$exeDir/vibecoding');
+      candidates.add('$exeDir/mothx');
     } catch (_) {}
 
     final home = Platform.environment['HOME'] ?? '';
     candidates.addAll([
-      'vibecoding',
-      '/usr/local/bin/vibecoding',
-      '$home/.local/bin/vibecoding',
-      '$home/go/bin/vibecoding',
+      'mothx',
+      '/usr/local/bin/mothx',
+      '$home/.local/bin/mothx',
+      '$home/go/bin/mothx',
     ]);
 
     // Walk up from cwd.
     var dir = Directory.current.path;
     while (dir != '/' && dir.isNotEmpty) {
-      candidates.add('$dir/vibecoding/build/bin/vibecoding');
-      candidates.add('$dir/vibecoding/vibecoding');
+      candidates.add('$dir/mothx/build/bin/mothx');
+      candidates.add('$dir/mothx/mothx');
       final parent = File(dir).parent.path;
       if (parent == dir) break;
       dir = parent;
@@ -39,7 +39,7 @@ class VibeCodingLocator {
     // PATH lookup.
     final pathEnv = Platform.environment['PATH'] ?? '';
     for (final p in pathEnv.split(':')) {
-      final f = File('$p/vibecoding');
+      final f = File('$p/mothx');
       if (f.existsSync()) return f.path;
     }
     return null;
@@ -50,7 +50,7 @@ class VibeCodingLocator {
 class ConfigService {
   String get _home => Platform.environment['HOME'] ?? '';
 
-  String get _guiDir => '$_home/.vibework';
+  String get _guiDir => '$_home/.mothx-gui';
   String get _settingsPath => '$_guiDir/settings.json';
   String get _sessionsPath => '$_guiDir/sessions.json';
   String get _uiPath => '$_guiDir/ui.json';
@@ -60,7 +60,7 @@ class ConfigService {
     if (!await dir.exists()) await dir.create(recursive: true);
   }
 
-  // ---- VibeCoding settings (~/.vibecoding/settings.json) ----
+  // ---- Mothx settings (~/.mothx/settings.json) ----
   Future<Map<String, dynamic>> loadSettings() async {
     final f = File(_settingsPath);
     if (!await f.exists()) return _defaultSettings();
@@ -77,7 +77,7 @@ class ConfigService {
     await File(_settingsPath).writeAsString(encoder.convert(settings));
   }
 
-  // ---- Sessions metadata (~/.vibecoding-gui/sessions.json) ----
+  // ---- Sessions metadata (~/.mothx-gui/sessions.json) ----
   Future<List<SessionInfo>> loadSessions() async {
     final f = File(_sessionsPath);
     if (!await f.exists()) return [];
@@ -98,7 +98,7 @@ class ConfigService {
         .writeAsString(encoder.convert(sessions.map((s) => s.toJson()).toList()));
   }
 
-  // ---- UI config (~/.vibecoding-gui/ui.json) ----
+  // ---- UI config (~/.mothx-gui/ui.json) ----
   Future<Map<String, dynamic>> loadUiConfig() async {
     final f = File(_uiPath);
     if (!await f.exists()) return {'theme': 'dark'};

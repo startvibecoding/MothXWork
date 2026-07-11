@@ -41,7 +41,7 @@
 ## 核心架构
 
 - **AcpClient (acp_client.dart)**:
-  - 接管 `vibecoding acp` 底层二进制的拉起、stdin 写入流 (`_stdin?.add()`) 与 stdout 逐行读取解包监听 (`_handleLine()`)。
+  - 接管 `mothx acp` 底层二进制的拉起、stdin 写入流 (`_stdin?.add()`) 与 stdout 逐行读取解包监听 (`_handleLine()`)。
   - 将 JSON-RPC 规范定义的通用响应（Response with numeric ID）和服务器端通知（Notification）实时分拣。
   - 通过广播 Stream (`Stream<AcpEvent>`) 将事件分发。
 
@@ -52,5 +52,5 @@
 
 ## 会话（Session）与配置存储
 
-- **~/.vibecoding/settings.json**: VibeCoding 引擎官方的全局配置文件（由 GUI 在 Settings 中直接实时读取与同步保存）。
-- **~/.vibecoding-gui/sessions.json**: 仅缓存各会话的基础信息（会话随机 ID、别名、选定工作目录 CWD 以及创建时间）。真实的聊天上下文与运行时数据库由 VibeCoding 各会话底层的逻辑自己管理。
+- **~/.mothx/settings.json**: Mothx 引擎官方的全局配置文件（由 GUI 在 Settings 中直接实时读取与同步保存）。
+- **~/.mothx-gui/sessions.json**: 仅缓存各会话的基础信息（会话随机 ID、别名、选定工作目录 CWD 以及创建时间）。真实的聊天上下文与运行时数据库由 Mothx 各会话底层的逻辑自己管理。

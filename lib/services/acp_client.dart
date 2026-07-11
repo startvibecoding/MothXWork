@@ -1,13 +1,14 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
-/// An event emitted from the ACP stream, mirroring the Go ACPEvent/ChatEvent.
+/// An event emitted from the ACP stream, mirroring the Go ACP protocol.
 class AcpEvent {
   final String type;
   final String? sessionId;
   final String content;
-  final dynamic data;
+  final Map<String, dynamic>? data;
   final String? error;
 
   AcpEvent({
@@ -19,19 +20,53 @@ class AcpEvent {
   });
 }
 
-/// ACPClient communicates with the `vibecoding acp` subprocess via JSON-RPC
-/// over stdin/stdout. This is a direct Dart port of the Go implementation.
+/// Usage info from a usage_update notification.
+class AcpUsage {
+  final int used;
+  final int size;
+  final double? costAmount;
+
+  AcpUsage({
+    required this.used,
+    required this.size,
+    this.costAmount,
+  });
+
+  factory AcpUsage.fromData(Map<String, dynamic> data) {
+    return AcpUsage(
+      used: (data['used'] as num?)?.toInt() ?? 0,
+      size: (data['size'] as num?)?.toInt() ?? 0,
+      costAmount: (data['cost'] as Map?)?['amount']?.toDouble(),
+    );
+  }
+}
+
+/// AcpClient communicates with the `mothx acp` subprocess via JSON-RPC
+/// over stdin/stdout, implementing the Agent Client Protocol (ACP).
+///
+/// Supported ACP methods:
+///   - initialize
+///   - session/new
+///   - session/load
+///   - session/prompt
+///   - session/cancel
+///   - session/close
+///   - session/list
+///
+/// Server→client notifications:
+///   - session/update (agent_message_chunk, agent_thought_chunk, tool_call,
+///     tool_call_update, user_message_chunk, status, usage_update)
+///   - session/request_permission
 class AcpClient {
   Process? _process;
   IOSink? _stdin;
-  final String vibecodingPath;
-  final Map<String, String?> _args;
+  final String mothxPath;
 
   int _nextId = 0;
   final Map<int, Completer<Map<String, dynamic>>> _pending = {};
-  final Set<String> sessions = {};
+  final Set<String> _sessions = {};
+  Set<String> get sessions => UnmodifiableSetView(_sessions);
 
-  // Broadcast stream of session events (content / tool calls / permissions).
   final StreamController<AcpEvent> _events =
       StreamController<AcpEvent>.broadcast();
 
@@ -40,31 +75,22 @@ class AcpClient {
   StreamSubscription<String>? _stdoutSub;
   bool _closed = false;
 
-  AcpClient(this.vibecodingPath, {this._args = const {}});
+  AcpClient(this.mothxPath);
 
-  /// Starts the subprocess and the stdout reader.
+  /// Starts the `mothx acp` subprocess and the stdout reader.
   Future<void> start() async {
-    final cmdArgs = <String>['acp'];
-    _args.forEach((key, value) {
-      if (value != null && value.isNotEmpty) {
-        cmdArgs.add('--$key');
-        cmdArgs.add(value);
-      }
-    });
-
     _process = await Process.start(
-      vibecodingPath,
-      cmdArgs,
+      mothxPath,
+      ['acp'],
       mode: ProcessStartMode.normal,
     );
 
     _stdin = _process!.stdin;
 
-    // Forward stderr for debugging.
     _process!.stderr
         .transform(utf8.decoder)
         .transform(const LineSplitter())
-        .listen((line) => stderr.writeln('[VIBECODING] $line'));
+        .listen((line) => stderr.writeln('[MOTHX] $line'));
 
     _stdoutSub = _process!.stdout
         .transform(utf8.decoder)
@@ -76,7 +102,7 @@ class AcpClient {
     if (!_closed) {
       _events.add(AcpEvent(
         type: 'error',
-        error: 'VibeCoding process exited',
+        error: 'Mothx process exited',
       ));
     }
   }
@@ -92,7 +118,8 @@ class AcpClient {
 
     // Response to a numeric-id request.
     final id = msg['id'];
-    if (id is int && msg.containsKey('result') || (id is int && msg.containsKey('error'))) {
+    if (id is int &&
+        (msg.containsKey('result') || msg.containsKey('error'))) {
       final completer = _pending.remove(id);
       if (completer != null && !completer.isCompleted) {
         completer.complete(msg);
@@ -155,25 +182,16 @@ class AcpClient {
           },
         ));
         break;
-      case 'content':
-        final content = update['content'] as Map<String, dynamic>?;
-        _events.add(AcpEvent(
-          type: 'content',
-          sessionId: sessionId,
-          content: content?['text']?.toString() ?? '',
-          data: {'type': content?['type']},
-        ));
-        break;
       case 'tool_call':
         _events.add(AcpEvent(
           type: 'tool_call',
           sessionId: sessionId,
           data: {
-            'id': update['toolCallId'],
+            'toolCallId': update['toolCallId'],
             'title': update['title'],
             'kind': update['kind'],
             'status': update['status'],
-            'input': update['rawInput'],
+            'rawInput': update['rawInput'],
           },
         ));
         break;
@@ -188,10 +206,10 @@ class AcpClient {
           sessionId: sessionId,
           content: content,
           data: {
-            'id': update['toolCallId'],
+            'toolCallId': update['toolCallId'],
             'title': update['title'],
             'status': update['status'],
-            'output': rawOutput,
+            'rawOutput': rawOutput,
           },
         ));
         break;
@@ -199,7 +217,23 @@ class AcpClient {
         _events.add(AcpEvent(
           type: 'status',
           sessionId: sessionId,
+          content: update['status']?.toString() ?? '',
           data: {'status': update['status']},
+        ));
+        break;
+      case 'usage_update':
+        final used = (update['used'] as num?)?.toInt() ?? 0;
+        final size = (update['size'] as num?)?.toInt() ?? 0;
+        final cost = update['cost'] as Map?;
+        _events.add(AcpEvent(
+          type: 'usage_update',
+          sessionId: sessionId,
+          content: '$used/$size',
+          data: {
+            'used': used,
+            'size': size,
+            if (cost != null) 'cost': cost,
+          },
         ));
         break;
     }
@@ -221,7 +255,7 @@ class AcpClient {
         'toolCallId': toolCall['toolCallId'],
         'title': toolCall['title'],
         'kind': toolCall['kind'],
-        'input': toolCall['rawInput'],
+        'rawInput': toolCall['rawInput'],
         'options': optionsRaw,
       },
     ));
@@ -253,25 +287,34 @@ class AcpClient {
     return {};
   }
 
+  /// JSON-RPC initialize. Returns agent capabilities.
   Future<Map<String, dynamic>> initialize(
       String clientName, String clientVersion) {
     return _call('initialize', {
       'protocolVersion': 1,
       'clientInfo': {'name': clientName, 'version': clientVersion},
       'clientCapabilities': {
-        'session': {'cancel': true}
+        'session': {'cancel': true, 'close': true, 'list': true}
       },
     });
   }
 
-  Future<String> newSession(String cwd) async {
-    final result = await _call('session/new', {'cwd': cwd});
+  /// Create a new session. Returns sessionId.
+  Future<String> newSession(String cwd,
+      {List<Map<String, dynamic>>? mcpServers}) async {
+    final Map<String, dynamic> params = {'cwd': cwd};
+    if (mcpServers != null) {
+      params['mcpServers'] = mcpServers;
+    }
+    final result = await _call('session/new', params);
     final sessionId = result['sessionId']?.toString() ?? '';
-    if (sessionId.isNotEmpty) sessions.add(sessionId);
+    if (sessionId.isNotEmpty) _sessions.add(sessionId);
     return sessionId;
   }
 
-  Future<void> loadSession(String sessionId, String cwd, {int? limit}) async {
+  /// Load an existing session. Emits historical messages as notifications.
+  Future<void> loadSession(String sessionId, String cwd,
+      {int? limit, List<Map<String, dynamic>>? mcpServers}) async {
     final Map<String, dynamic> params = {
       'sessionId': sessionId,
       'cwd': cwd,
@@ -279,11 +322,15 @@ class AcpClient {
     if (limit != null) {
       params['limit'] = limit;
     }
+    if (mcpServers != null) {
+      params['mcpServers'] = mcpServers;
+    }
     await _call('session/load', params);
-    sessions.add(sessionId);
+    _sessions.add(sessionId);
   }
 
-  /// Sends a prompt and returns the stopReason.
+  /// Send a prompt. Returns stopReason (e.g. "end_turn", "cancelled").
+  /// This is a long-running call that resolves when the agent finishes.
   Future<String> prompt(String sessionId, String text) async {
     final result = await _call('session/prompt', {
       'sessionId': sessionId,
@@ -294,11 +341,34 @@ class AcpClient {
     return result['stopReason']?.toString() ?? '';
   }
 
+  /// Cancel an active prompt for a session.
   Future<void> cancel(String sessionId) async {
     await _call('session/cancel', {'sessionId': sessionId});
   }
 
-  /// Sends a JSON-RPC *response* to a server-initiated permission request.
+  /// Close a session, freeing server-side resources.
+  Future<void> closeSession(String sessionId) async {
+    await _call('session/close', {'sessionId': sessionId});
+    _sessions.remove(sessionId);
+  }
+
+  /// List sessions with pagination. Returns (sessions, nextCursor).
+  Future<({List<Map<String, dynamic>> sessions, String? nextCursor})>
+      listSessions({String? cwd, String? cursor}) async {
+    final Map<String, dynamic> params = {};
+    if (cwd != null) params['cwd'] = cwd;
+    if (cursor != null) params['cursor'] = cursor;
+
+    final result = await _call('session/list', params);
+    final sessionsList = (result['sessions'] as List?)
+            ?.map((e) => Map<String, dynamic>.from(e as Map))
+            .toList() ??
+        [];
+    final nextCursor = result['nextCursor']?.toString();
+    return (sessions: sessionsList, nextCursor: nextCursor);
+  }
+
+  /// Send a JSON-RPC response to a server-initiated permission request.
   Future<void> sendPermissionResponse(
       String requestId, String optionId) async {
     final response = jsonEncode({

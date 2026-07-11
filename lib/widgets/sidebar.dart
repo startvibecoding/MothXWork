@@ -4,6 +4,15 @@ import 'package:provider/provider.dart';
 import '../services/app_state.dart';
 import '../theme/app_theme.dart';
 
+/// Sidebar navigation items.
+const _primaryNavItems = [
+  {'key': 'chat', 'icon': Icons.edit_outlined, 'iconActive': Icons.edit, 'label': 'Chat'},
+  {'key': 'sessions', 'icon': Icons.history_outlined, 'iconActive': Icons.history, 'label': 'Sessions'},
+  {'key': 'stats', 'icon': Icons.bar_chart_outlined, 'iconActive': Icons.bar_chart, 'label': 'Stats'},
+  {'key': 'cron', 'icon': Icons.schedule_outlined, 'iconActive': Icons.schedule, 'label': 'Cron'},
+  {'key': 'logs', 'icon': Icons.terminal_outlined, 'iconActive': Icons.terminal, 'label': 'Logs'},
+];
+
 class Sidebar extends StatelessWidget {
   final VoidCallback onNewSession;
   final VoidCallback onOpenSettings;
@@ -50,12 +59,12 @@ class Sidebar extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('VibeWork',
+                    Text('Mothx',
                         style: TextStyle(
                             color: c.textPrimary,
                             fontSize: 18,
                             fontWeight: FontWeight.w600)),
-                    Text('Power By VibeCoding',
+                    Text('Powered by Mothx',
                         style:
                             TextStyle(color: c.textSecondary, fontSize: 11)),
                   ],
@@ -85,76 +94,132 @@ class Sidebar extends StatelessWidget {
             ),
           ),
 
+          // Navigation tabs
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            child: Column(
+              children: _primaryNavItems.map((item) {
+                final isActive = app.currentPage == item['key'];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Material(
+                    color: isActive ? c.accent.withValues(alpha: 0.15) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => app.navigateToPage(item['key'] as String),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        child: Row(
+                          children: [
+                            Icon(
+                              isActive ? item['iconActive'] as IconData : item['icon'] as IconData,
+                              size: 18,
+                              color: isActive ? c.accent : c.textSecondary,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              item['label'] as String,
+                              style: TextStyle(
+                                color: isActive ? c.accent : c.textSecondary,
+                                fontSize: 14,
+                                fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+
+          // Session list header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            child: Row(
+              children: [
+                Text('SESSIONS',
+                    style: TextStyle(
+                        color: c.textSecondary,
+                        fontSize: 11,
+                        letterSpacing: 1,
+                        fontWeight: FontWeight.w500)),
+                const Spacer(),
+                if (app.currentPage != 'sessions')
+                  InkWell(
+                    onTap: () => app.navigateToPage('sessions'),
+                    child: Text('All',
+                        style: TextStyle(color: c.accent, fontSize: 11, fontWeight: FontWeight.w500)),
+                  ),
+              ],
+            ),
+          ),
+
           // Sessions list
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8, bottom: 8),
-                    child: Text('SESSIONS',
-                        style: TextStyle(
-                            color: c.textSecondary,
-                            fontSize: 11,
-                            letterSpacing: 1,
-                            fontWeight: FontWeight.w500)),
-                  ),
-                  Expanded(
-                    child: sessions.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.only(left: 8),
-                            child: Text('No sessions yet',
-                                style: TextStyle(
-                                    color: c.textTertiary, fontSize: 13)),
-                          )
-                        : ListView.separated(
-                            itemCount: sessions.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(height: 4),
-                            itemBuilder: (context, i) {
-                              final s = sessions[i];
-                              final selected = app.currentSessionId == s.id;
-                              return _SessionTile(
-                                selected: selected,
-                                idLabel: s.id.length > 20
-                                    ? '${s.id.substring(0, 20)}...'
-                                    : s.id,
-                                name: s.name,
-                                onTap: () => app.selectSession(s.id),
-                                onDelete: () => app.deleteSession(s.id),
-                              );
-                            },
-                          ),
-                  ),
-                ],
-              ),
+              child: sessions.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Text('No sessions yet',
+                          style: TextStyle(
+                              color: c.textTertiary, fontSize: 13)),
+                    )
+                  : ListView.separated(
+                      itemCount: sessions.length > 12 ? 12 : sessions.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 2),
+                      itemBuilder: (context, i) {
+                        final s = sessions[i];
+                        final selected = app.currentSessionId == s.id;
+                        return _SessionTile(
+                          selected: selected,
+                          idLabel: s.id.length > 20
+                              ? '${s.id.substring(0, 20)}...'
+                              : s.id,
+                          name: s.name,
+                          onTap: () {
+                            app.selectSession(s.id);
+                            if (app.currentPage != 'chat') {
+                              app.navigateToPage('chat');
+                            }
+                          },
+                          onDelete: () => app.deleteSession(s.id),
+                        );
+                      },
+                    ),
             ),
           ),
 
-          // Settings
+          // Bottom bar: Settings
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               border: Border(top: BorderSide(color: c.separator)),
             ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: onOpenSettings,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  children: [
-                    Icon(Icons.settings, size: 18, color: c.textSecondary),
-                    const SizedBox(width: 8),
-                    Text('全局设置',
-                        style:
-                            TextStyle(color: c.textSecondary, fontSize: 13)),
-                  ],
+            child: Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: onOpenSettings,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(Icons.settings, size: 18, color: c.textSecondary),
+                          const SizedBox(width: 8),
+                          Text('Settings',
+                              style: TextStyle(color: c.textSecondary, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
