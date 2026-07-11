@@ -1,4 +1,4 @@
-.PHONY: dev build clean run help deb all
+.PHONY: dev build build-windows build-macos clean run help deb all
 
 # Configuration
 BUILD_DIR      := build/bin
@@ -36,6 +36,14 @@ build:
 	mkdir -p $(BUILD_DIR)
 	cp -r $(FLUTTER_BUNDLE)/* $(BUILD_DIR)/
 	@echo "✅ Flutter build completed: $(BUILD_DIR)/mothx-gui"
+
+## build-windows: Build a Windows release bundle (run on Windows)
+build-windows:
+	flutter build windows --release
+
+## build-macos: Build a macOS release app bundle (run on macOS)
+build-macos:
+	flutter build macos --release
 
 ## run: Run the built application
 run: build

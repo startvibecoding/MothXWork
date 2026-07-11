@@ -1498,8 +1498,8 @@ class _ServeTabState extends State<_ServeTab> {
   void initState() {
     super.initState();
     final app = context.read<AppState>();
-    _baseUrlCtrl = TextEditingController(text: app.serveBaseUrl ?? 'http://localhost:8080');
-    _authTokenCtrl = TextEditingController(text: app.serveAuthToken ?? '');
+    _baseUrlCtrl = TextEditingController(text: app.serveBaseUrl);
+    _authTokenCtrl = TextEditingController(text: app.serveAuthToken);
   }
 
   @override
@@ -1551,7 +1551,13 @@ class _ServeTabState extends State<_ServeTab> {
     await app.disconnectServeMode();
 
     final settings = app.settings;
-    settings['serveMode'] = {'enabled': false};
+    settings['serveMode'] = {
+      'enabled': false,
+      'baseUrl': _baseUrlCtrl.text.trim(),
+      'authToken': _authTokenCtrl.text.trim().isEmpty
+          ? null
+          : _authTokenCtrl.text.trim(),
+    };
     await app.saveSettings(settings);
 
     setState(() {
@@ -1563,7 +1569,7 @@ class _ServeTabState extends State<_ServeTab> {
   @override
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
-    final isConnected = app.connectionMode == ConnectionMode.serve && app.isConnected;
+    final isConnected = app.isConnected;
 
     return SingleChildScrollView(
       child: Column(
@@ -1603,7 +1609,7 @@ class _ServeTabState extends State<_ServeTab> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    isConnected ? 'Connected to serve mode' : 'Not connected (using ACP mode)',
+                    isConnected ? 'Connected to mothx serve' : 'Not connected to mothx serve',
                     style: TextStyle(
                       color: isConnected ? widget.c.accentGreen : widget.c.textSecondary,
                       fontSize: 13,

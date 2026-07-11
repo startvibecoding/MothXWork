@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +18,7 @@ class InputArea extends StatefulWidget {
 class _InputAreaState extends State<InputArea> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focus = FocusNode();
+  final List<_ImageAttachment> _images = [];
 
   @override
   void dispose() {
@@ -25,9 +29,53 @@ class _InputAreaState extends State<InputArea> {
 
   void _send(AppState app) {
     final text = _controller.text;
-    if (text.trim().isEmpty || app.isLoading) return;
+    if ((text.trim().isEmpty && _images.isEmpty) || app.isLoading) return;
+    final imageParts = _images
+        .map((image) => {
+              'type': 'image_url',
+              'image_url': {'url': image.dataUrl, 'detail': 'auto'},
+            })
+        .toList();
     _controller.clear();
-    app.sendMessage(text);
+    setState(() => _images.clear());
+    app.sendMessage(text, imageParts: imageParts);
+  }
+
+  Future<void> _pickImages(AppState app) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: true,
+      withData: true,
+    );
+    if (!mounted || result == null) return;
+    final selected = <_ImageAttachment>[];
+    for (final file in result.files) {
+      final bytes = file.bytes;
+      if (bytes == null) continue;
+      selected.add(_ImageAttachment(
+        name: file.name,
+        dataUrl: 'data:${_mimeType(file.extension)};base64,${base64Encode(bytes)}',
+      ));
+    }
+    if (selected.isEmpty) {
+      app.reportError('Unable to read selected image files.');
+      return;
+    }
+    setState(() => _images.addAll(selected.take(6 - _images.length)));
+  }
+
+  String _mimeType(String? extension) {
+    switch (extension?.toLowerCase()) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'gif':
+        return 'image/gif';
+      case 'webp':
+        return 'image/webp';
+      default:
+        return 'image/png';
+    }
   }
 
   @override
@@ -35,7 +83,7 @@ class _InputAreaState extends State<InputArea> {
     final c = AppTheme.of(context);
     final app = context.watch<AppState>();
     final cwd = app.runtimeConfig.cwd;
-    final canSend = !app.isLoading && app.currentSessionId != null;
+    final canSend = !app.isLoading && app.isConnected;
 
     return Container(
       decoration: BoxDecoration(
@@ -68,12 +116,12 @@ class _InputAreaState extends State<InputArea> {
                     child: TextField(
                       controller: _controller,
                       focusNode: _focus,
-                      enabled: !app.isLoading && app.currentSessionId != null,
+                      enabled: canSend,
                       minLines: 2,
                       maxLines: 6,
                       style: TextStyle(color: c.textPrimary, fontSize: 15),
                       decoration: InputDecoration(
-                        hintText: app.currentSessionId == null
+                        hintText: !canSend
                             ? 'Connecting/No Session...'
                             : 'Type your message...',
                         hintStyle: TextStyle(color: c.textTertiary),
@@ -86,6 +134,14 @@ class _InputAreaState extends State<InputArea> {
                 ),
               ),
               const SizedBox(width: 12),
+              IconButton(
+                tooltip: 'Attach images',
+                onPressed: canSend && _images.length < 6
+                    ? () => _pickImages(app)
+                    : null,
+                icon: Icon(Icons.attach_file,
+                    color: canSend ? c.textSecondary : c.textTertiary),
+              ),
               app.isLoading
                   ? _ActionButton(
                       color: c.accentRed,
@@ -111,6 +167,19 @@ class _InputAreaState extends State<InputArea> {
                     ),
             ],
           ),
+          if (_images.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8, left: 4),
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: _images.asMap().entries.map((entry) => Chip(
+                  avatar: const Icon(Icons.image_outlined, size: 16),
+                  label: Text(entry.value.name, overflow: TextOverflow.ellipsis),
+                  onDeleted: () => setState(() => _images.removeAt(entry.key)),
+                )).toList(),
+              ),
+            ),
           if (cwd.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 8, left: 4),
@@ -133,6 +202,13 @@ class _InputAreaState extends State<InputArea> {
       ),
     );
   }
+}
+
+class _ImageAttachment {
+  final String name;
+  final String dataUrl;
+
+  const _ImageAttachment({required this.name, required this.dataUrl});
 }
 
 class _ActionButton extends StatelessWidget {

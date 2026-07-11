@@ -11,6 +11,8 @@ const _primaryNavItems = [
   {'key': 'stats', 'icon': Icons.bar_chart_outlined, 'iconActive': Icons.bar_chart, 'label': 'Stats'},
   {'key': 'cron', 'icon': Icons.schedule_outlined, 'iconActive': Icons.schedule, 'label': 'Cron'},
   {'key': 'logs', 'icon': Icons.terminal_outlined, 'iconActive': Icons.terminal, 'label': 'Logs'},
+  {'key': 'channels', 'icon': Icons.forum_outlined, 'iconActive': Icons.forum, 'label': 'Channels'},
+  {'key': 'serve', 'icon': Icons.dns_outlined, 'iconActive': Icons.dns, 'label': 'Serve'},
 ];
 
 class Sidebar extends StatelessWidget {

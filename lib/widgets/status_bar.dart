@@ -13,7 +13,6 @@ class StatusBar extends StatelessWidget {
     final app = context.watch<AppState>();
     final connected = app.isConnected;
     final session = app.currentSessionId;
-    final mode = app.connectionMode;
     final serveUrl = app.serveUrl;
 
     return Container(
@@ -36,18 +35,16 @@ class StatusBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              // Connection mode badge
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: (mode == ConnectionMode.serve ? c.accentPurple : c.accent)
-                      .withValues(alpha: 0.15),
+                  color: c.accentPurple.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  mode == ConnectionMode.serve ? 'SERVE' : 'ACP',
+                  'SERVE',
                   style: TextStyle(
-                    color: mode == ConnectionMode.serve ? c.accentPurple : c.accent,
+                    color: c.accentPurple,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     fontFamily: 'monospace',
@@ -57,8 +54,7 @@ class StatusBar extends StatelessWidget {
               const SizedBox(width: 8),
               Text(connected ? 'Connected' : 'Disconnected',
                   style: TextStyle(color: c.textSecondary, fontSize: 13)),
-              // Serve URL indicator
-              if (mode == ConnectionMode.serve && serveUrl != null) ...[
+              if (serveUrl != null) ...[
                 const SizedBox(width: 8),
                 Text('|', style: TextStyle(color: c.separator)),
                 const SizedBox(width: 8),

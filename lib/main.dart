@@ -1,16 +1,17 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'services/app_state.dart';
 import 'theme/app_theme.dart';
 import 'widgets/chat_area.dart';
+import 'widgets/channels_page.dart';
 import 'widgets/cron_page.dart';
 import 'widgets/global_settings.dart';
 import 'widgets/input_area.dart';
 import 'widgets/logs_page.dart';
-import 'widgets/permission_dialog.dart';
 import 'widgets/session_settings.dart';
+import 'widgets/session_tools.dart';
+import 'widgets/serve_page.dart';
 import 'widgets/sessions_page.dart';
 import 'widgets/stats_page.dart';
 import 'widgets/sidebar.dart';
@@ -66,21 +67,6 @@ class MainLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
 
-    // Show permission dialog as overlay when a pending request arrives.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final req = app.pendingPermission;
-      if (req != null && Navigator.of(context).canPop() == false) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => ChangeNotifierProvider.value(
-            value: app,
-            child: PermissionDialog(request: req),
-          ),
-        ).then((_) => app.dismissPermission());
-      }
-    });
-
     return Scaffold(
       body: Row(
         children: [
@@ -89,11 +75,58 @@ class MainLayout extends StatelessWidget {
             onOpenSettings: () => _showGlobalSettingsDialog(context),
           ),
           Expanded(
-            child: _PageRouter(
-              onNewSession: () => _showNewSessionDialog(context),
+            child: Column(
+              children: [
+                if (app.errorBanner != null)
+                  _ErrorBanner(message: app.errorBanner!),
+                Expanded(
+                  child: _PageRouter(
+                    onNewSession: () => _showNewSessionDialog(context),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ErrorBanner extends StatelessWidget {
+  final String message;
+
+  const _ErrorBanner({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppTheme.of(context);
+    final app = context.read<AppState>();
+    return Material(
+      color: c.accentRed.withValues(alpha: 0.12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            Icon(Icons.error_outline, size: 18, color: c.accentRed),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(message,
+                  style: TextStyle(color: c.textPrimary, fontSize: 13)),
+            ),
+            if (!app.isConnected)
+              IconButton(
+                tooltip: 'Retry serve connection',
+                onPressed: app.reconnectServe,
+                icon: Icon(Icons.refresh, size: 18, color: c.textSecondary),
+              ),
+            IconButton(
+              tooltip: 'Dismiss error',
+              onPressed: app.dismissError,
+              icon: Icon(Icons.close, size: 18, color: c.textSecondary),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -125,6 +158,10 @@ class _PageRouter extends StatelessWidget {
         return const CronPage();
       case 'logs':
         return const LogsPage();
+      case 'serve':
+        return const ServePage();
+      case 'channels':
+        return const ChannelsPage();
       default:
         return Column(
           children: [
@@ -180,8 +217,7 @@ class _Header extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          // Serve mode indicator
-          if (app.connectionMode == ConnectionMode.serve)
+          if (app.isConnected)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               margin: const EdgeInsets.only(right: 8),
@@ -206,6 +242,8 @@ class _Header extends StatelessWidget {
                 ],
               ),
             ),
+          const SessionActivityButton(),
+          const SessionToolsButton(),
           const SessionSettingsButton(),
         ],
       ),
@@ -217,16 +255,124 @@ class _Header extends StatelessWidget {
 // Dialogs
 // ---------------------------------------------------------------------------
 
-/// New session: pick a directory via FilePicker, then create session.
 Future<void> _showNewSessionDialog(BuildContext context) async {
   final app = context.read<AppState>();
-
-  final path = await FilePicker.platform.getDirectoryPath(
-    dialogTitle: 'Select Working Directory',
+  final path = await showDialog<String>(
+    context: context,
+    builder: (_) => ChangeNotifierProvider.value(
+      value: app,
+      child: const _ServeDirectoryDialog(),
+    ),
   );
   if (path == null || path.isEmpty) return;
 
   await app.createSession(path);
+}
+
+class _ServeDirectoryDialog extends StatefulWidget {
+  const _ServeDirectoryDialog();
+
+  @override
+  State<_ServeDirectoryDialog> createState() => _ServeDirectoryDialogState();
+}
+
+class _ServeDirectoryDialogState extends State<_ServeDirectoryDialog> {
+  String _path = '';
+  String _parent = '';
+  List<Map<String, dynamic>> _entries = [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  Future<void> _load([String? path]) async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    final data = await context.read<AppState>().browseDirectories(path: path);
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      if (data == null) {
+        _error = 'Unable to browse directories on mothx serve.';
+        return;
+      }
+      _path = (data['path'] ?? '').toString();
+      _parent = (data['parent'] ?? '').toString();
+      final entries = data['entries'];
+      _entries = entries is List
+          ? entries.whereType<Map>().map((entry) => Map<String, dynamic>.from(entry)).toList()
+          : [];
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppTheme.of(context);
+    return AlertDialog(
+      backgroundColor: c.secondary,
+      title: Text('Select Working Directory', style: TextStyle(color: c.textPrimary)),
+      content: SizedBox(
+        width: 540,
+        height: 420,
+        child: Column(children: [
+          Row(children: [
+            Expanded(child: Text(_path.isEmpty ? 'Loading...' : _path,
+                maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: c.textSecondary, fontFamily: 'monospace'))),
+            IconButton(
+              tooltip: 'Parent directory',
+              onPressed: _parent.isEmpty || _loading ? null : () => _load(_parent),
+              icon: const Icon(Icons.arrow_upward),
+            ),
+            IconButton(
+              tooltip: 'Refresh directory',
+              onPressed: _loading ? null : () => _load(_path),
+              icon: const Icon(Icons.refresh),
+            ),
+          ]),
+          const Divider(),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null
+                    ? Center(child: Text(_error!, style: TextStyle(color: c.accentRed)))
+                    : ListView.builder(
+                        itemCount: _entries.length,
+                        itemBuilder: (_, index) {
+                          final entry = _entries[index];
+                          final entryPath = (entry['path'] ?? '').toString();
+                          return ListTile(
+                            leading: const Icon(Icons.folder_outlined),
+                            title: Text((entry['name'] ?? entryPath).toString()),
+                            onTap: entryPath.isEmpty ? null : () => _load(entryPath),
+                            trailing: IconButton(
+                              tooltip: 'Select this directory',
+                              icon: const Icon(Icons.check),
+                              onPressed: entryPath.isEmpty
+                                  ? null
+                                  : () => Navigator.of(context).pop(entryPath),
+                            ),
+                          );
+                        },
+                      ),
+          ),
+        ]),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+        FilledButton(
+          onPressed: _path.isEmpty ? null : () => Navigator.of(context).pop(_path),
+          child: const Text('Select'),
+        ),
+      ],
+    );
+  }
 }
 
 /// Rename session: showDialog with a TextField.

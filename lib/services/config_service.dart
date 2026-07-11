@@ -1,78 +1,54 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:path/path.dart' as path;
+
 import '../models/models.dart';
-
-/// Locates the mothx binary, mirroring findMothxBinary() in Go.
-class MothxLocator {
-  static String? find() {
-    final candidates = <String>[];
-
-    // Next to the executable (bundled).
-    try {
-      final exeDir = File(Platform.resolvedExecutable).parent.path;
-      candidates.add('$exeDir/mothx');
-    } catch (_) {}
-
-    final home = Platform.environment['HOME'] ?? '';
-    candidates.addAll([
-      'mothx',
-      '/usr/local/bin/mothx',
-      '$home/.local/bin/mothx',
-      '$home/go/bin/mothx',
-    ]);
-
-    // Walk up from cwd.
-    var dir = Directory.current.path;
-    while (dir != '/' && dir.isNotEmpty) {
-      candidates.add('$dir/mothx/build/bin/mothx');
-      candidates.add('$dir/mothx/mothx');
-      final parent = File(dir).parent.path;
-      if (parent == dir) break;
-      dir = parent;
-    }
-
-    for (final c in candidates) {
-      if (c.contains('/') && File(c).existsSync()) return c;
-    }
-
-    // PATH lookup.
-    final pathEnv = Platform.environment['PATH'] ?? '';
-    for (final p in pathEnv.split(':')) {
-      final f = File('$p/mothx');
-      if (f.existsSync()) return f.path;
-    }
-    return null;
-  }
-}
 
 /// Reads/writes config files used by the app.
 class ConfigService {
-  String get _home => Platform.environment['HOME'] ?? '';
+  String get _home {
+    final env = Platform.environment;
+    if (Platform.isWindows) {
+      final profile = env['USERPROFILE'];
+      if (profile != null && profile.isNotEmpty) return profile;
+      return '${env['HOMEDRIVE'] ?? ''}${env['HOMEPATH'] ?? ''}';
+    }
+    return env['HOME'] ?? '';
+  }
 
-  String get _guiDir => '$_home/.mothx-gui';
-  String get _settingsPath => '$_guiDir/settings.json';
-  String get _sessionsPath => '$_guiDir/sessions.json';
-  String get _uiPath => '$_guiDir/ui.json';
+  String get _guiDir => path.join(_home, '.mothx-gui');
+  String get _mothxDir => path.join(_home, '.mothx');
+  String get _settingsPath => path.join(_mothxDir, 'settings.json');
+  String get _legacySettingsPath => path.join(_guiDir, 'settings.json');
+  String get _sessionsPath => path.join(_guiDir, 'sessions.json');
+  String get _uiPath => path.join(_guiDir, 'ui.json');
 
   Future<void> _ensureGuiDir() async {
     final dir = Directory(_guiDir);
     if (!await dir.exists()) await dir.create(recursive: true);
   }
 
+  Future<void> _ensureMothxDir() async {
+    final dir = Directory(_mothxDir);
+    if (!await dir.exists()) await dir.create(recursive: true);
+  }
+
   // ---- Mothx settings (~/.mothx/settings.json) ----
   Future<Map<String, dynamic>> loadSettings() async {
     final f = File(_settingsPath);
-    if (!await f.exists()) return _defaultSettings();
+    final legacy = File(_legacySettingsPath);
+    final source = await f.exists() ? f : await legacy.exists() ? legacy : null;
+    if (source == null) return _defaultSettings();
     try {
-      return jsonDecode(await f.readAsString()) as Map<String, dynamic>;
+      return Map<String, dynamic>.from(jsonDecode(await source.readAsString()) as Map);
     } catch (_) {
       return _defaultSettings();
     }
   }
 
   Future<void> saveSettings(Map<String, dynamic> settings) async {
-    await _ensureGuiDir();
+    await _ensureMothxDir();
     final encoder = const JsonEncoder.withIndent('  ');
     await File(_settingsPath).writeAsString(encoder.convert(settings));
   }

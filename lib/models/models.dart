@@ -281,9 +281,9 @@ class ChatMessage {
       ts = DateTime.now();
     }
 
-    final parsedContents = contentsList != null
-        ? contentsList.map((c) => ContentBlock.fromJson(Map<String, dynamic>.from(c as Map))).toList()
-        : null;
+    final parsedContents = contentsList
+        ?.map((c) => ContentBlock.fromJson(Map<String, dynamic>.from(c as Map)))
+        .toList();
 
     String contentText = (json['content'] ?? '').toString();
     if (contentText.isEmpty && parsedContents != null) {
@@ -385,47 +385,6 @@ class SessionRuntimeConfig {
       thinking: thinking ?? this.thinking,
     );
   }
-}
-
-/// A permission option from session/request_permission
-class PermissionOption {
-  final String optionId;
-  final String name;
-  final String kind;
-
-  PermissionOption({
-    required this.optionId,
-    required this.name,
-    required this.kind,
-  });
-
-  factory PermissionOption.fromJson(Map<String, dynamic> json) {
-    return PermissionOption(
-      optionId: (json['optionId'] ?? '').toString(),
-      name: (json['name'] ?? '').toString(),
-      kind: (json['kind'] ?? '').toString(),
-    );
-  }
-}
-
-class PermissionRequest {
-  final String requestId;
-  final String sessionId;
-  final String toolCallId;
-  final String title;
-  final String kind;
-  final dynamic input;
-  final List<PermissionOption> options;
-
-  PermissionRequest({
-    required this.requestId,
-    required this.sessionId,
-    required this.toolCallId,
-    required this.title,
-    required this.kind,
-    required this.input,
-    required this.options,
-  });
 }
 
 /// Provider / Model models for settings UI
@@ -702,5 +661,3 @@ class LogEntry {
     );
   }
 }
-
-
